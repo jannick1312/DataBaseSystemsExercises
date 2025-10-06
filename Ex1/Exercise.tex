@@ -207,8 +207,8 @@ Intersect on scene key, then output Titles:
 \pi\left[Title\right]\\
  ((\pi\left[MovieID,SceneID\right](\sigma\left[Name='Scarlett Johansson' \land Role='actor'\right]\\
  (ScenePerformer \Join Person)) \cap \pi\left[MovieID,SceneID\right]\\
- (\sigma\left[Name='Scarlett Johansson' \land Role='stunt double'\right](ScenePerformer \Join Person))) \Join Scene
-)
+ (\sigma\left[Name='Scarlett Johansson' \land Role='stunt double'\right]\\
+ (ScenePerformer \Join Person))) \Join Scene)
 \end{multline}
 
 \item
@@ -224,7 +224,104 @@ F_{1.2} = \{sa | sa \in SceneAuthor \land sa.Activity='director' \}
 
 Join by PID, output (MovieID,SceneID) without Person:
 \begin{multline}
-\{\langle sa.MovieID, sa.SceneID \rangle | sa \in F_{1.1} \land \exists p\,(p \in F_{1.2} \land p.PID = sa.PID)\}
+\{\langle sa.MovieID, sa.SceneID \rangle | sa \in F_{1.2} \land \exists p(p \in F_{1.1} \land p.PID = sa.PID)\}
+\end{multline}
+
+\item
+Movie on Title:
+\begin{equation}
+G_{2.1} = \{m | m \in Movie \land m.MovieTitle='Inception'\}
+\end{equation}
+
+Hans Zimmer as composer (within that movie):
+\begin{multline}
+G_{2.2} = \{sa | sa \in SceneAuthor \land sa.Activity='composer' \land \\
+\exists p(p \in Person \land p.PID=sa.PID \land p.Name='Hans Zimmer') \land \\
+\exists m(m \in G_{2.1} \land m.MovieID=sa.MovieID)\}
+\end{multline}
+
+Christopher Nolan as screenwriter (within that movie):
+\begin{multline}
+G_{2.3} = \{sa | sa \in SceneAuthor \land sa.Activity='screenwriter' \land \\
+\exists p(p \in Person \land p.PID=sa.PID \land p.Name='Christopher Nolan') \land \\
+\exists m(m \in G_{2.1} \land m.MovieID=sa.MovieID)\}
+\end{multline}
+
+Intersect on full scene key, then output SceneID:
+\begin{equation}
+\{\langle x.SceneID \rangle | x \in G_{2.2} \land \exists y(y \in G_{2.3} \land y.MovieID=x.MovieID \land y.SceneID=x.SceneID) \}
+\end{equation}
+
+\item
+Person on Name (subset of Person):
+\begin{equation}
+H_{3.1} = \{ p | p \in Person \land p.Name='Quentin Tarantino' \}
+\end{equation}
+
+Actor role on ScenePerformer:
+\begin{equation}
+H_{3.2} = \{ sp | sp \in ScenePerformer \land sp.Role='actor' \}
+\end{equation}
+
+Director activity on SceneAuthor:
+\begin{equation}
+H_{3.3} = \{ sa | sa \in SceneAuthor \land sa.Activity='director' \}
+\end{equation}
+
+Join on person and scene, then output Title:
+\begin{multline}
+\{ \langle s.Title \rangle | s \in Scene \land \exists p\exists sp\exists sa(p \in H_{3.1} \land sp \in H_{3.2} \land sa \in H_{3.3} \land {}\\
+ sp.PID=p.PID \land sa.PID=p.PID \land \\
+ sp.MovieID=sa.MovieID \land sp.SceneID=sa.SceneID \land \\
+ s.MovieID=sp.MovieID \land s.SceneID=sp.SceneID ) \}
+\end{multline}
+
+\item
+Person on Name (subset of Person):
+\begin{equation}
+I_{4.1} = \{ p | p \in Person \land p.Name='Robert Downey Jr.' \}
+\end{equation}
+
+Actor role on ScenePerformer:
+\begin{equation}
+I_{4.2} = \{ sp | sp \in ScenePerformer \land sp.Role='actor' \}
+\end{equation}
+
+Any author activity on SceneAuthor:
+\begin{equation}
+I_{4.3} = \{ sa | sa \in SceneAuthor \}
+\end{equation}
+
+Actor or author in the same movie, then output MovieTitle:
+\begin{multline}
+\{ \langle m.MovieTitle \rangle | m \in Movie \land (\exists p\exists sp(p \in I_{4.1} \land sp \in I_{4.2} \land \\
+ sp.PID=p.PID \land sp.MovieID=m.MovieID) \lor {}\\
+\exists q\exists sa(q \in I_{4.1} \land sa \in I_{4.3} \land sa.PID=q.PID \land sa.MovieID=m.MovieID)
+) \}
+\end{multline}
+
+\item
+Person on Name (subset of Person):
+\begin{equation}
+J_{5.1} = \{ p | p \in Person \land p.Name='Scarlett Johansson' \}
+\end{equation}
+
+Actor role on ScenePerformer:
+\begin{equation}
+J_{5.2} = \{ spA | spA \in ScenePerformer \land spA.Role='actor' \}
+\end{equation}
+
+Stunt double role on ScenePerformer:
+\begin{equation}
+J_{5.3} = \{ spS | spS \in ScenePerformer \land spS.Role='stunt double' \}
+\end{equation}
+
+Same person, same scene, then output Title:
+\begin{multline}
+\{ \langle s.Title \rangle | s \in Scene \land \exists p\exists spA\exists spS(p \in J_{5.1} \land spA \in J_{5.2} \land spS \in J_{5.3} \land {}\\
+ spA.PID=p.PID \land spS.PID=p.PID \land \\
+ spA.MovieID=spS.MovieID \land spA.SceneID=spS.SceneID \land\\
+ s.MovieID=spA.MovieID \land s.SceneID=spA.SceneID ) \}
 \end{multline}
 
 
