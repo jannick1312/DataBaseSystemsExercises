@@ -106,22 +106,126 @@ Relational algebra is a treat with \LaTeX, as can be seen in~\Cref{eq:ans}:
 \item 
 Person on Name:
 \begin{equation}
-\label{eq:a1}
 \sigma\left[Name='Christopher Nolan'\right](Person)
 \end{equation}
 
 Activity on SceneAuthor:
 \begin{equation}
-\label{eq:a2}
 \sigma\left[Activity='director'\right](SceneAuthor)
 \end{equation}
 
 Add join on both:
+\begin{multline}
+\pi\left[MovieID,SceneID\right](\sigma\left[Name='Christopher Nolan' \land Activity='director'\right]\\
+ (Person \Join SceneAuthor))
+\end{multline}
+
+\item
+Movie on Title:
 \begin{equation}
-\label{eq:a-compact}
-\pi\left[MovieID,SceneID\right](\sigma\left[Name='Christopher Nolan' \land Activity='director'\right]
-  (Person \Join SceneAuthor))
+\sigma[MovieTitle='Inception'](Movie)
 \end{equation}
+
+Hans Zimmer as composer (within that movie):
+\begin{multline}
+\pi\left[MovieID,SceneID\right]\\
+ (\sigma\left[MovieTitle='Inception' \land Name='Hans Zimmer' \land Activity='composer'\right]\\
+ (Movie \Join SceneAuthor \Join Person))
+\end{multline}
+
+Christopher Nolan as screenwriter (within that movie):
+\begin{multline}
+\pi\left[MovieID,SceneID\right]\\
+ (\sigma\left[MovieTitle='Inception' \land Name='Christopher Nolan' \land Activity='screenwriter'\right]\\
+ (Movie \Join SceneAuthor \Join Person))
+\end{multline}
+
+Intersect on scene key then output SceneID:
+\begin{multline}
+\pi\left[SceneID\right]\\
+((\pi\left[MovieID,SceneID\right]\\
+ (\sigma\left[MovieTitle='Inception' \land Name='Hans Zimmer' \land Activity='composer'\right]\\
+ (Movie \Join SceneAuthor \Join Person))) \cap \\
+ (\pi\left[MovieID,SceneID\right]\\
+ (\sigma\left[MovieTitle='Inception' \land Name='Christopher Nolan' \land Activity='screenwriter'\right]\\
+ (Movie \Join SceneAuthor \Join Person))))
+\end{multline}
+
+\item
+Person on Name:
+\begin{equation}
+\sigma\left[Name='Quentin Tarantino'\right](Person)
+\end{equation}
+
+Actor role on ScenePerformer:
+\begin{equation}
+\sigma\left[Role='actor'\right](ScenePerformer)
+\end{equation}
+
+Director activity on SceneAuthor:
+\begin{equation}
+\sigma\left[Activity='director'\right](SceneAuthor)
+\end{equation}
+
+Combine and output scene Titles:
+\begin{multline}
+\pi\left[Title\right](\sigma\left[Name='Quentin Tarantino' \land Role='actor' \land Activity='director'\right]\\
+ (Scene \Join ScenePerformer \Join SceneAuthor \Join Person))
+\end{multline}
+
+\item
+Actor on ScenePerformer:
+\begin{equation}
+\sigma\left[Name='Robert Downey Jr.' \land Role='actor'\right](ScenePerformer \Join Person)
+\end{equation}
+
+Author on SceneAuthor:
+\begin{equation}
+\sigma\left[Name='Robert Downey Jr.'\right](SceneAuthor \Join Person)
+\end{equation}
+
+Union on MovieID, then output MovieTitle:
+\begin{multline}
+\pi\left[MovieTitle\right]\\
+ ((\pi\left[MovieID\right](\sigma\left[Name='Robert Downey Jr.' \land Role='actor'\right](ScenePerformer \Join Person))\\
+ \cup \pi\left[MovieID\right](\sigma\left[Name='Robert Downey Jr.'\right](SceneAuthor \Join Person))) \Join Movie)
+\end{multline}
+
+\item
+Actor on ScenePerformer:
+\begin{equation}
+\sigma\left[Name='Scarlett Johansson' \land Role='actor'\right](ScenePerformer \Join Person)
+\end{equation}
+
+Stunt double on ScenePerformer:
+\begin{equation}
+\sigma\left[Name='Scarlett Johansson' \land Role='stunt double'\right](ScenePerformer \Join Person)
+\end{equation}
+
+Intersect on scene key, then output Titles:
+\begin{multline}
+\pi\left[Title\right]\\
+ ((\pi\left[MovieID,SceneID\right](\sigma\left[Name='Scarlett Johansson' \land Role='actor'\right]\\
+ (ScenePerformer \Join Person)) \cap \pi\left[MovieID,SceneID\right]\\
+ (\sigma\left[Name='Scarlett Johansson' \land Role='stunt double'\right](ScenePerformer \Join Person))) \Join Scene
+)
+\end{multline}
+
+\item
+Person on Name (subset of Person):
+\begin{equation}
+F_{1.1} = \{p | p \in Person \land p.Name='Christopher Nolan' \}
+\end{equation}
+
+Activity on SceneAuthor (subset of SceneAuthor):
+\begin{equation}
+F_{1.2} = \{sa | sa \in SceneAuthor \land sa.Activity='director' \}
+\end{equation}
+
+Join by PID, output (MovieID,SceneID) without Person:
+\begin{multline}
+\{\langle sa.MovieID, sa.SceneID \rangle | sa \in F_{1.1} \land \exists p\,(p \in F_{1.2} \land p.PID = sa.PID)\}
+\end{multline}
 
 
 \end{enumerate}
