@@ -82,9 +82,6 @@
 %%
 %% ================================================================
 
-This template showcases various useful latex commands and setups.
-Remove this for your actual hand-in.
-
 %% ================================================================
 %%
 %% Your Solution
@@ -93,17 +90,86 @@ Remove this for your actual hand-in.
 %%
 %% Add your solution below
 \task{}
-Relational algebra is a treat with \LaTeX, as can be seen in~\Cref{eq:ans}:
-
-\begin{equation}
-\label{eq:ans}
-\pi\left[Attribute1,Attribute2\right](\sigma\left[Attribute=Something\right](Entity1) \Join Entity2)
-\end{equation}
-
-\task{}
 
 \begin{enumerate}[(a)]
+\item
+Which instructor (LastName, FirstName) created the lesson with the LessonID 42?
+\begin{equation}
+\pi\left[LastName,FirstName\right](\sigma\left[LessonID='42'\right](Lesson)\Join instructor)
+\end{equation}
+
+\item
+In which semesters and for which courses was the sub-lesson witz ID 21 used?
+\begin{align}
+    \begin{split}
+\pi\left[Semester, Title, No, CourseID\right]\\
+(((\pi\left[MainLessonID\right](\sigma\left[SubLessonID = '21'\right](is\_part\_of)))\Join \\
+\left[MainLessonID = LessonID\right](includes))\Join(course))
+    \end{split}
+\end{align}
+
+\item
+What lessons (LessonID, Description) consist of sub-lessons?
+\begin{align}
+    \begin{split}
+\pi\left[LessonID,Description\right]((\sigma\left[SublessonID\neq'null'\right](is\_part\_of))\Join \\
+\left[MainLessonID=LessonID\right](Lesson))
+    \end{split}
+\end{align}
+
+\item
+Which courses were taught exclusively by Jon Snow?
+
 \item 
+What lessons (including the sub-lessons) are contained inside course 1 of the semester Spring 2024 and titled Database Systems?
+
+\item How long (in minutes) is the lesson with the ID (LessonID) 21?
+\begin{align}
+    (l.Duration \mid l \in Lesson \wedge l.LessonID = 21)
+\end{align}
+
+\item Which lessons of the semester Autumn 2025 have a duration of less than 30 minutes?
+\begin{align}
+    \begin{split}
+   (l \mid l \in Lesson \wedge l.Duration < 30 \wedge \exists c \in Course (c.Semester = Autumn 2025)\wedge \\ 
+   \exists\in Includes(i.CourseID=c.CourseID\wedge i.LessonID = l.LessonID))
+    \end{split}
+\end{align}
+
+\item For which semesters exist courses with main lessons where Jon Snow instructed at least one lesson?
+\begin{align}
+    \begin{split}
+   (c.Semester \mid c \in Course\wedge\exists i \in \\
+   Includes(\exists l \in Lesson(l.LessonID = i.LessonID \wedge \\
+   \exists j \in Instructor (l.InstructorID = j.InstructorID \wedge \\ 
+   j.LastName=Snow \wedge j.FirstName = John))))
+    \end{split}
+\end{align}
+
+\item What lessons consist of sub-lessons that have been instructed by at least two different instructors?
+\begin{align}
+    \begin{split}
+   (l \mid l \in Lesson \wedge \exists i_1 \in is\_part\_of (i_1.MainLessonID=l.LessonID\wedge \\
+   \exists l_1 \in Lesson(l_1.LessonID=i_1.SubLessonID))\\
+   \exists i_2 \in is\_part\_of (i_2.MainLessonID=i_1.MainLessonID\wedge \\
+   \exists l_2 \in Lesson(l_2.LessonID=i_2.SubLessonID\wedge l_1.InstructorID \neq l_2.InstructorID)))
+    \end{split}
+\end{align}
+
+\item Which courses contain only main lessons with a difficulty of at least 3?
+\begin{equation}
+    \begin{split}
+    (c \mid c \in Course \wedge \forall i\in includes(c.CourseID = i.CourseID \wedge \\
+    \forall l \in Lesson(l.LessonID=i.LessonID\wedge l.Difficulty \geq 3)))
+    \end{split}
+\end{equation}
+
+
+\end{enumerate}
+
+\task{}
+\begin{enumerate}[(a)]
+\item
 Person on Name:
 \begin{equation}
 \sigma\left[Name='Christopher Nolan'\right](Person)
