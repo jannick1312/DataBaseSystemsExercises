@@ -99,7 +99,7 @@ Which instructor (LastName, FirstName) created the lesson with the LessonID 42?
 \end{equation}
 
 \item
-In which semesters and for which courses was the sub-lesson witz ID 21 used?
+In which semesters and for which courses was the sub-lesson with ID 21 used?
 \begin{align}
     \begin{split}
 \pi\left[Semester, Title, No, CourseID\right]\\
@@ -112,7 +112,7 @@ In which semesters and for which courses was the sub-lesson witz ID 21 used?
 What lessons (LessonID, Description) consist of sub-lessons?
 \begin{align}
     \begin{split}
-\pi\left[LessonID,Description\right]((\sigma\left[SublessonID\neq'null'\right](is\_part\_of))\Join \\
+\pi\left[LessonID,Description\right](is\_part\_of\Join \\
 \left[MainLessonID=LessonID\right](Lesson))
     \end{split}
 \end{align}
