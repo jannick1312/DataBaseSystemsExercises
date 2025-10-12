@@ -119,9 +119,31 @@ What lessons (LessonID, Description) consist of sub-lessons?
 
 \item
 Which courses were taught exclusively by Jon Snow?
+\begin{align}
+    \begin{split}
+T \;=&\; ((\text{includes} \Join \\[-1pt]
+&\left[\text{includes.LessonID}=\text{Lesson.LessonID}\right] \text{Lesson}) \Join \\[-1pt]
+&\left[\text{Lesson.InstructorID}=\text{Instructor.InstructorID}\right] \text{Instructor})\\[4pt]
+\text{Bad} \;=&\; \pi\left[\text{CourseID}\right]\big(\sigma\left[\neg(\text{LastName}='Snow' \land \text{FirstName}='Jon')\right](T)\big)\\[4pt]
+\text{Good} \;=&\; \pi\left[\text{CourseID}\right](\text{includes})\;-\;\text{Bad}\\[4pt]
+&\pi\left[\text{Semester},\ \text{Title},\ \text{No},\ \text{CourseID}\right]
+\big(\text{Course} \Join \\[-1pt]
+&\left[\text{Course.CourseID}=\text{Good.CourseID}\right] \text{Good}\big)
+    \end{split}
+\end{align}
+
+
 
 \item 
 What lessons (including the sub-lessons) are contained inside course 1 of the semester Spring 2024 and titled Database Systems?
+\begin{align}
+    \begin{split}
+\pi\left[\text{Lesson.LessonID},\ \text{Description}\right]
+\Big(\ \text{Lesson}\ \Join
+\left[\text{Lesson.LessonID}=\text{A.LessonID}\right]\ A\ \Big)
+    \end{split}
+\end{align}
+
 
 \item How long (in minutes) is the lesson with the ID (LessonID) 21?
 \begin{align}
