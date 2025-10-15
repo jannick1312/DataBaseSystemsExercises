@@ -1,0 +1,218 @@
+%% ================================================================
+%% # DBIS Databases Hand-in Style
+%% 
+%% Style for students to hand-in their databases exercise solutions.
+%% 
+%% [Databases and Information Systems Group](https://dbis.dmi.unibas.ch/)
+%%
+%% ## Usage
+%% 
+%% This package is designed for article documents and can be used by
+%% having `\usepackage{dbisdbhandin}` in the preamble.
+%%
+%% ## Issues
+%%
+%% Issues shall be passed to the current maintainer.
+%% 
+%% ---
+%% 
+%% Version:     1.2.0 
+%% Year:        2025
+%% Maintainer:  David Lengweiler
+%% 
+%% ## Changelog
+%%
+%% v1.2.0 - 3 names
+%%
+%% v1.1.0 - The frontpage will also be printed,
+%%            if users forgot to explicitely call \printfront
+%%          
+%% v1.0.0 - Initial Version, Loris Sauter
+%%
+%%
+%% ================================================================
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{dbisdbhandin}[2019]
+
+%% ================================================================
+%%
+%% General Format Settings
+%%
+%% ================================================================
+\usepackage{a4wide}         % A4 paper format
+\usepackage[utf8]{inputenc} % Input format is utf8
+%% In case a windows text editor has issues recognizing this document,
+%% the option of package `inputenc` can be changed to `latin1` (ISO 8859-1)
+\usepackage[T1]{fontenc}    % Format of outptu PDF
+\usepackage[ngerman, english]{babel} % Language - both english and german supported
+\usepackage{fancyhdr}       % Required for headers
+\usepackage{lastpage}       % For Page X of Y in Header. Requires twice pdflatex execution
+\usepackage{multirow}       % Required for the table on the front page.
+%% ================================================================
+%%
+%% Useful packages included
+%%
+%% ================================================================
+\usepackage{etoolbox}
+\usepackage{enumerate}      % Fancification of enumerations
+\usepackage[hidelinks]{hyperref}       % Fancy links
+\usepackage{amssymb}        % Beautiful math symbols
+\usepackage{amsmath}        % Beautiful math symbols
+\usepackage{wasysym}        % Additional symbols
+\usepackage{graphics}       % Graphics
+\usepackage{tikz}           % Tikz
+\usetikzlibrary{positioning}% Positioning lib for tikz
+\usetikzlibrary{shapes}     % Lovely shapes for tikz
+\usepackage{cleveref}       % Clever references are always smarter
+\usepackage[normalem]{ulem} % Relational Algebra: underline and underwave
+\usepackage{listings}       % Amazing code snippets 
+\usepackage{multicol}       % Mul-ti-columns!
+
+
+%% ================================================================
+%%
+%% Header and Front Page Text to be set
+%%
+%% ================================================================
+
+%% Couse Name
+\newcommand*{\course}[1]{\def\inscourse{#1}}
+%% Semester Number
+\newcommand*{\semester}[1]{\def\inssemester{#1}}
+%% Participants Names
+\newcommand*{\studenta}[1]{\def\insstudenta{#1}}
+\newcommand*{\studentb}[1]{\def\insstudentb{#1}}
+\newcommand*{\studentc}[1]{\def\insstudentc{#1}}
+%% Exercise Label
+\def\insexlbl{\iflanguage{english}{Exercise}{Aufgaben}}
+%% Exercise Number
+\newcommand*{\exerciseno}[1]{\def\insexno{#1}}
+
+\@ifundefined{insstudentb}{\def\insstudentb{~}}{}
+\@ifundefined{insstudentc}{\def\insstudentc{~}}{}
+
+%% ================================================================
+%%
+%% Header setup
+%%
+%% ================================================================
+
+%% Header Design:
+%%
+%% Course                                                 Student A
+%% Semester                                               Student B
+%% Exercise X                                           Page x of y
+
+%% Left Side of Header
+\lhead{\inscourse\\\inssemester\\\insexlbl~\insexno}
+%% Right 
+\rhead{\insstudenta\\\insstudentb\\\insstudentc\\Page~\thepage~of~\pageref{LastPage}}
+%% Height of header
+\usepackage[headheight=36pt]{geometry}
+%% Use the headers
+\pagestyle{fancy}
+%% No page number in center footer
+\cfoot{}
+
+%% ================================================================
+%%
+%% Title Page Setup
+%%
+%% ================================================================
+% Boolean to see whether the front page was already issued (\printfront)
+\newbool{isfrontcalled}
+\boolfalse{isfrontcalled}
+
+\newcommand*{\printfront}{
+    \ifbool{isfrontcalled}{}{
+        \booltrue{isfrontcalled}
+        \frontpage
+    }
+}
+
+\newcommand*{\frontpage}{
+	\begin{titlepage}
+		%% Course Semester
+		%% Hand-In ExerciseLabel ExerciseNumber
+		%% Date
+		%% StudentA
+		%% StudentB
+        \sffamily
+		\vspace*{2cm}
+		{\centering
+            
+			\Huge{\textbf{\inscourse~\inssemester}}\\
+			\vspace*{2ex}
+			\Huge{\textbf{Hand-In~\insexlbl~\insexno}}\\
+            \vspace*{2cm}
+			\normalsize
+            \today\\
+            \vspace*{1ex}
+			\insstudenta\\
+			\insstudentb\\
+			\insstudentc\\
+			\vspace*{1ex}
+            %% Table ready for Sum:
+            \renewcommand{\arraystretch}{1.5}
+            \begin{tabular}{|l|l|}
+            	\hline
+            	\textbf{Total Points} & \hspace*{4cm}\\ \hline
+            \end{tabular}\\
+        	
+        	\vspace*{3ex}
+        	\begin{tabular}{p{4cm}|p{4cm}}
+        		\textbf{Task} & \textbf{Points} \\ \hline
+        		&\\ [7cm]
+        	\end{tabular}
+        	
+		}
+	\end{titlepage}
+	\renewcommand{\arraystretch}{1}
+}
+
+
+%% ================================================================
+%%
+%% Task Section Setup
+%%
+%% ================================================================
+%%
+%% Kindly borrowed from https://tex.stackexchange.com/a/394117
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{chngcntr}
+\newcounter{task}
+\titleclass{\task}{straight}[\section]
+\titleformat{\task}[hang]{\normalfont\Large\bfseries}{Task~\thetask}{1em}{}
+\titlespacing*{\task}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+\renewcommand{\thetask}{\arabic{task}}
+%\counterwithin{task}{section}
+\contentsmargin{1em}
+\titlecontents*{task}[2em]{}{\bfseries\contentslabel{2em}}{}
+{\titlerule*[.5pc]{.}\contentspage}[]
+\dottedcontents{section}[4em]{}{2em}{.5pc}
+
+%% ================================================================
+%%
+%% Misc Layout
+%%
+%% ================================================================
+%%
+%% No indentation
+\setlength\parindent{0pt}
+
+
+%% ================================================================
+%%
+%% Front Page
+%%
+%% ================================================================
+% Only add \printfront to atbegindocument, if it was not yet issued.
+\AtBeginDocument{
+    \printfront
+}
+
+
+\endinput
+%% End of file `dbisdbhandin.sty`
