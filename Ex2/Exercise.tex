@@ -114,6 +114,13 @@ Given excerpt of the relational schema plus added relations and integrety constr
 \task{}
 
 \task{}
-NOT sure yeeeet.
+When we say something is \textbf{DEFERRABLE INITIALLY DEFERRED}, it means that the database will wait until the end of a transaction before checking certain rules, such as foreign key constraints. This is useful when two tables depend on each other. For example, a \texttt{Lecture} table and a \texttt{Lecturer} table. A lecture record might point to the lecturer who gives it, while the lecturer record might also depend on the lecture. If we try to insert both of these in the same transaction, the database might raise an error because when we insert the first one, the other does not yet exist.
+
+
+If the rule is \textbf{NOT DEFERRABLE}, the database checks immediately, and the operation fails. If it is \textbf{DEFERRABLE INITIALLY IMMEDIATE}, we would need to manually tell the database to delay the check. However, if it is \textbf{DEFERRABLE INITIALLY DEFERRED}, the database automatically waits until the transaction ends to perform the checks. This allows both inserts to complete first, and the database only verifies the rules afterward, which helps prevent errors.
+
+
+\end{document}
+
 
 \end{document}
