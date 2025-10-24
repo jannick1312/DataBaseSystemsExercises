@@ -49,6 +49,13 @@
 %% A library providing ER prefabs
 \usetikzlibrary{er}
 \usetikzlibrary{positioning,arrows.meta}
+
+
+\usepackage{enumitem}
+% show subtask labels as "<current task number><letter>" e.g., 2a, 2b
+\newlist{subtasks}{enumerate}{1}
+\setlist[subtasks]{label=\arabic{task}\alph*), ref=\arabic{task}\alph*)}
+
 %% ================================================================
 %%
 %% Custom Packages
@@ -76,6 +83,8 @@
 \begin{document}
 
 \printfront
+
+% ---------------- Task 1 ----------------
 
 \task{}
 Given excerpt of the relational schema plus added relations and integrety constrain befor the first bullet point.
@@ -109,7 +118,156 @@ Given excerpt of the relational schema plus added relations and integrety constr
 \end{itemize}
 
 
-\task{}
+% ---------------- Task 2 ----------------
+\task{Foreign Keys}
+
+\begin{subtasks}
+
+\item % -> prints "2a)"
+\textbf{Foreign Keys}\\
+For the relation \texttt{Lecture}, the following foreign key is defined in SQL:
+\begin{lstlisting}[language=SQL,frame=single,numbers=left,numberstyle=\tiny]
+CREATE TABLE Lecture (
+  ...,
+  FOREIGN KEY (fk_lecturer) REFERENCES Lecturer(pk_lecturer)
+);
+\end{lstlisting}
+
+In the following, this foreign key is simulated using \emph{(i)} an assertion and \emph{(ii)} triggers.
+
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Assertion (static integrity constraint)}\\
+An \texttt{ASSERTION} ensures that no tuple in \texttt{Lecture} references a non-existent \texttt{Lecturer}.
+We formulate this as a double \texttt{NOT EXISTS} statement that expresses the same semantics as a foreign key.
+
+\begin{lstlisting}[language=SQL,frame=single,numbers=left,numberstyle=\tiny]
+CREATE ASSERTION FK_Lecture_Lecturer_OK
+CHECK (
+  NOT EXISTS (
+    SELECT 1
+    FROM Lecture L
+    WHERE L.fk_lecturer IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM Lecturer R
+        WHERE R.pk_lecturer = L.fk_lecturer
+      )
+  )
+)
+DEFERRABLE INITIALLY IMMEDIATE;
+\end{lstlisting}
+
+This assertion guarantees that for every non-NULL value in \texttt{Lecture.fk\_lecturer}, a matching \texttt{Lecturer.pk\_lecturer} exists. The condition is checked globally and can be deferred to commit time using the \texttt{DEFERRABLE} clause.
+
+\item \textbf{Triggers (dynamic integrity constraint)}\\
+The same referential integrity can be dynamically enforced by triggers (E–C–A pattern):
+\begin{itemize}
+  \item \textbf{Child-side:} Prevent inserting or updating a \texttt{Lecture} with a non-existent \texttt{fk\_lecturer}.
+  \item \textbf{Parent-side:} Prevent deleting or updating a \texttt{Lecturer} that is still referenced by a \texttt{Lecture}.
+\end{itemize}
+
+\paragraph{Child-side triggers (on \texttt{Lecture})}
+\begin{lstlisting}[language=SQL,frame=single,numbers=left,numberstyle=\tiny]
+CREATE TRIGGER Lecture_FK_Check_Ins 
+BEFORE INSERT ON Lecture 
+WHEN (NEW.fk_lecturer IS NOT NULL AND
+      NOT EXISTS (SELECT 1 FROM Lecturer R 
+                  WHERE R.pk_lecturer = NEW.fk_lecturer))
+( ROLLBACK WORK );
+
+CREATE TRIGGER Lecture_FK_Check_Upd 
+BEFORE UPDATE OF fk_lecturer ON Lecture
+REFERENCING NEW AS Lnew
+WHEN (Lnew.fk_lecturer IS NOT NULL AND 
+      NOT EXISTS (SELECT 1 FROM Lecturer R
+                  WHERE R.pk_lecturer = Lnew.fk_lecturer))
+( ROLLBACK WORK );
+\end{lstlisting}
+
+\paragraph{Parent-side triggers (on \texttt{Lecturer})}
+\begin{lstlisting}[language=SQL,frame=single,numbers=left,numberstyle=\tiny]
+CREATE TRIGGER Lecturer_Ref_Block_Del
+BEFORE DELETE ON Lecturer
+REFERENCING OLD AS Pold
+WHEN (EXISTS (SELECT 1 FROM Lecture L
+              WHERE L.fk_lecturer = Pold.pk_lecturer))
+( ROLLBACK WORK );
+
+CREATE TRIGGER Lecturer_Ref_Block_Upd
+BEFORE UPDATE OF pk_lecturer ON Lecturer
+REFERENCING OLD AS Pold NEW AS Pnew
+WHEN (EXISTS (SELECT 1 FROM Lecture L
+              WHERE L.fk_lecturer = Pold.pk_lecturer))
+( ROLLBACK WORK );
+\end{lstlisting}
+
+\begin{itemize}
+  \item The \textbf{child-side} triggers prevent inserting or updating a lecture referencing a non-existent lecturer.
+  \item The \textbf{parent-side} triggers prevent deleting or changing a lecturer ID if at least one lecture still refers to it.
+  \item The \texttt{ROLLBACK WORK} aborts the transaction on violation (\texttt{NO ACTION}-like).
+\end{itemize}
+\end{enumerate} % <-- end (i)/(ii) list inside 2a
+
+\item % -> prints "2b)"
+\textbf{Simulating \texttt{FOREIGN KEY (FkExam) REFERENCES Exam(PkExam) ON DELETE SET NULL} with triggers}
+
+We enforce referential integrity procedurally:
+\begin{itemize}
+  \item \textbf{Child-side (Student).} Block \texttt{INSERT}/\texttt{UPDATE} that sets \texttt{FkExam} to a non-existent \texttt{Exam.PkExam} (allow \texttt{NULL}).
+  \item \textbf{Parent-side (Exam) on \texttt{DELETE}.} Before deleting an \texttt{Exam} row, set \texttt{Student.FkExam := NULL} for all referencing students (\texttt{ON DELETE SET NULL}).
+  \item \textbf{Parent-side (Exam) on \texttt{UPDATE PkExam}.} Default is \emph{NO ACTION}; block if referenced.
+\end{itemize}
+
+\paragraph{Child-side checks (INSERT/UPDATE on \texttt{Student})}
+\begin{lstlisting}[language=SQL,frame=single,numbers=left,numberstyle=\tiny]
+CREATE TRIGGER Student_FK_Check_Ins
+BEFORE INSERT ON Student
+WHEN ( NEW.FkExam IS NOT NULL AND
+       NOT EXISTS (SELECT 1 FROM Exam E
+                   WHERE E.PkExam = NEW.FkExam) )
+( ROLLBACK WORK );
+
+CREATE TRIGGER Student_FK_Check_Upd
+BEFORE UPDATE OF FkExam ON Student
+REFERENCING NEW AS Snew
+WHEN ( Snew.FkExam IS NOT NULL AND
+       NOT EXISTS (SELECT 1 FROM Exam E
+                   WHERE E.PkExam = Snew.FkExam) )
+( ROLLBACK WORK );
+\end{lstlisting}
+
+\paragraph{Parent-side action (DELETE on \texttt{Exam}) — simulate \texttt{ON DELETE SET NULL}}
+\begin{lstlisting}[language=SQL,frame=single,numbers=left,numberstyle=\tiny]
+CREATE TRIGGER Exam_Delete_SetNull
+BEFORE DELETE ON Exam
+REFERENCING OLD AS Eold
+(
+  UPDATE Student
+  SET FkExam = NULL
+  WHERE FkExam = Eold.PkExam
+);
+\end{lstlisting}
+
+\paragraph{Parent-side block (UPDATE of \texttt{PkExam}) — simulate \texttt{ON UPDATE NO ACTION}}
+\begin{lstlisting}[language=SQL,frame=single,numbers=left,numberstyle=\tiny]
+CREATE TRIGGER Exam_Block_Update_PK
+BEFORE UPDATE OF PkExam ON Exam
+REFERENCING OLD AS Eold NEW AS Enew
+WHEN ( EXISTS (SELECT 1 FROM Student S
+               WHERE S.FkExam = Eold.PkExam) )
+( ROLLBACK WORK );
+\end{lstlisting}
+
+\textit{Notes.}
+\begin{itemize}
+  \item Ensure \texttt{Student(FkExam)} allows \texttt{NULL}; otherwise \texttt{SET NULL} would fail.
+  \item The \texttt{DELETE} trigger clears references before parent removal.
+  \item Using \texttt{ROLLBACK WORK} follows the lecture’s “block on violation” pattern.
+\end{itemize}
+
+\end{subtasks}
+% -------------- end Task 2 --------------
+
 
 \task{}
 
