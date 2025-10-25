@@ -268,8 +268,51 @@ WHEN ( EXISTS (SELECT 1 FROM Student S
 \end{subtasks}
 % -------------- end Task 2 --------------
 
-
+% -------------- begin Task 3 ------------
 \task{}
+
+Using Assertions or Triggers
+because integrity constraints span multiple relations and not only one (Create Table Statement).
+
+\begin{enumerate}[label=\alph*)]
+    \item Using Assertions because constraints too general and not specific event. \\ e.g. no new orders when ...
+        
+        \underline{U2109:} each User must have SUM(c.CreditScore) >= -1000 creditpoints over all credits. 
+
+
+        \begin{verbatim}
+        CREATE ASSERTION CreditLimitU2109
+        CHECK(NOT EXISTS(
+            SELECT u.UID
+            FROM User u
+            JOIN Regulation r ON u.Country = r.Country
+            JOIN Credit c ON u.UID = c.UID
+            WHERE r.RegulationCode = 'U2109'
+            GROUP u.UID
+            HAVING SUM(c.CreditScore) < -1000))
+        DEFFERABLE INITIALLY DEFERRED
+        \end{verbatim}
+
+        \underline{U2304:} each User must have SUM(c.CreditScore) >= (-0.1 * MAX(b.BetAmount))
+
+        \begin{verbatim}
+        CREATE ASSERTION CreditLimitU2109
+        CHECK(NOT EXISTS(
+            SELECT u.UID
+            FROM User u
+            JOIN Regulation r ON u.Country = r.Country
+            JOIN Credit c ON u.UID = c.UID
+            JOIN Bet b ON u.UID = b.UID
+            WHERE r.RegulationCode = 'U2304'
+            GROUP u.UID
+            HAVING SUM(c.CreditScore) < (-0.1 * MAX(b.BetAmount))))
+        DEFFERABLE INITIALLY DEFERRED
+        \end{verbatim}
+
+    \item 
+
+    \end{enumerate}
+% -------------- end Task 3 ------------
 
 \task{}
 When we say something is \textbf{DEFERRABLE INITIALLY DEFERRED}, it means that the database will wait until the end of a transaction before checking certain rules, such as foreign key constraints. This is useful when two tables depend on each other. For example, a \texttt{Lecture} table and a \texttt{Lecturer} table. A lecture record might point to the lecturer who gives it, while the lecturer record might also depend on the lecture. If we try to insert both of these in the same transaction, the database might raise an error because when we insert the first one, the other does not yet exist.
