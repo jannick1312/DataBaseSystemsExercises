@@ -288,7 +288,7 @@ because integrity constraints span multiple relations and not only one (Create T
             JOIN Regulation r ON u.Country = r.Country
             JOIN Credit c ON u.UID = c.UID
             WHERE r.RegulationCode = 'U2109'
-            GROUP u.UID
+            GROUP BY u.UID
             HAVING SUM(c.CreditScore) < -1000))
         DEFFERABLE INITIALLY DEFERRED
         \end{verbatim}
@@ -304,12 +304,29 @@ because integrity constraints span multiple relations and not only one (Create T
             JOIN Credit c ON u.UID = c.UID
             JOIN Bet b ON u.UID = b.UID
             WHERE r.RegulationCode = 'U2304'
-            GROUP u.UID
+            GROUP BY u.UID
             HAVING SUM(c.CreditScore) < (-0.1 * MAX(b.BetAmount))))
         DEFFERABLE INITIALLY DEFERRED
         \end{verbatim}
 
-    \item 
+    \item \underline{Materialized View:}
+    
+    \begin{verbatim}
+        CREATE VIED DailyOnlineTime
+        REFRESH FORCE ON COMMIT 
+        BUILD DEFERRED AS
+            SELECT u.UID, u.Name, u.Country, s.Date, 
+                SUM(s.Duration) AS dailyTotalTime
+            FROM User u
+            JOIN Regulation r ON u.Country = r.Country
+            JOIN Session s ON u.UID = s.UID
+            JOIN Bet b ON u.UID = b.UID
+            WHERE r.RegulationCode = 'M5475' 
+                AND u.Age BETWEEN 14 AND 18
+            GROUP BY u.Name, u.Country, s.Date;
+        \end{verbatim}
+
+    \item
 
     \end{enumerate}
 % -------------- end Task 3 ------------
