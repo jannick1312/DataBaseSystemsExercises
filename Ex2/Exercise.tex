@@ -275,6 +275,8 @@ Using Assertions or Triggers
 because integrity constraints span multiple relations and not only one (Create Table Statement).
 
 \begin{enumerate}[label=\alph*)]
+
+    % a)
     \item Using Assertions because constraints too general and not specific event. \\ e.g. no new orders when ...
         
         \underline{U2109:} each User must have SUM(c.CreditScore) >= -1000 creditpoints over all credits. 
@@ -309,10 +311,11 @@ because integrity constraints span multiple relations and not only one (Create T
         DEFFERABLE INITIALLY DEFERRED
         \end{verbatim}
 
+    % b)
     \item \underline{Materialized View:}
     
     \begin{verbatim}
-        CREATE VIED DailyOnlineTime
+        CREATE VIEW DailyOnlineTime
         REFRESH FORCE ON COMMIT 
         BUILD DEFERRED AS
             SELECT u.UID, u.Name, u.Country, s.Date, 
@@ -326,8 +329,39 @@ because integrity constraints span multiple relations and not only one (Create T
             GROUP BY u.Name, u.Country, s.Date;
         \end{verbatim}
 
-    \item
+    % c)
+    \item \underline{Refresh Materliazized View on Demand:}\\
+        Using additionaly a trigger to "manually" trigger the refresh of the view.
+        First changing the view to "ON DEMAND".
+        Second creating a trigger that refreshes the view when event happens.
 
+        \begin{verbatim}
+        CREATE VIEW DailyOnlineTime
+        REFRESH FORCE ON DEMAND 
+        BUILD DEFERRED AS
+            SELECT u.UID, u.Name, u.Country, s.Date, 
+                SUM(s.Duration) AS dailyTotalTime
+            FROM User u
+            JOIN Regulation r ON u.Country = r.Country
+            JOIN Session s ON u.UID = s.UID
+            JOIN Bet b ON u.UID = b.UID
+            WHERE r.RegulationCode = 'M5475' 
+                AND u.Age BETWEEN 14 AND 18
+            GROUP BY u.Name, u.Country, s.Date;
+        \end{verbatim}
+
+        \begin{verbatim}
+        CREATE TRIGGER refreshView_onM4575_change
+        REFRESH FORCE ON DEMAND 
+        AFTER INSERT OR DELETE OR UPDATE OF RegulationCode, Country
+        ON Regulation
+        REFERENCING OLD AS OldReg NEW AS NewReg
+        WHEN((NewReg.RegulationCode = 'M5475')
+                OR (OldReg.RegulationCode = 'M5475'))
+        (CALL DBMS_MVIEW.REFRESH('DailyOnlineTime'));
+        \end{verbatim}
+
+        Used own notation of view-refresh because no example or definition with refresh on slides.
     \end{enumerate}
 % -------------- end Task 3 ------------
 
