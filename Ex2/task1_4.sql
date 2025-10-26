@@ -4,5 +4,4 @@ CREATE TABLE Exercise (
 	Semester      VARCHAR(255),
 ->	LectureTitle  VARCHAR(255) NOT NULL,
 ->	FOREIGN KEY (LectureTitle) REFERENCES Lecture (Title)
-	ON UPDATE RESTRICT
 );

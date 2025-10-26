@@ -94,8 +94,8 @@ Given excerpt of the relational schema plus added relations and integrety constr
     \item 
     \textit{The title of the lecture has to be unique and may not be altered if any exercise is
     available for the lecture.}\\
-    The first part of the point is already enforced bc the title of the lecture is a \texttt{PRIMARY KEY} and therefore must be unique. The second part can be enforced with this addition.
-    \lstinputlisting[language=SQL,frame=single,numbers=left,numberstyle=\tiny]{task1_1.sql}
+    The first part of the point is already enforced bc the title of the lecture is a \texttt{PRIMARY KEY} and therefore must be unique. The second part can be enforced with this trigger.
+    \lstinputlisting[language=SQL,frame=single,numbers=left,numberstyle=\tiny]{task1_1.1.sql}
     \item 
     \textit{For a lecture, no more than 10 credit points may be awarded.}\\
     This part can be enforced with this assertion.
@@ -107,13 +107,13 @@ Given excerpt of the relational schema plus added relations and integrety constr
     \item 
     \textit{A lecture may include several exercises. An exercise always belongs to exactly one
     lecture.}\\
-    The first part is already enforced via the foreign key while for the second part we have to add the \texttt{NOT NULL} so we guaratee that e exersise must be in one lecture.
+    The first part is already enforced via the foreign key while for the second part we have to add the \texttt{NOT NULL} so we guaratee that an exersise must be in one lecture.
     \lstinputlisting[language=SQL,frame=single,numbers=left,numberstyle=\tiny]{task1_4.sql}
     \item 
     \textit{Before a new author is entered into the system, it should be checked that no other
     author with the same first name, last name and title is present.}\\
-    This part is beeing enforced with this.
-    \lstinputlisting[language=SQL,frame=single,numbers=left,numberstyle=\tiny]{task1_5.sql}
+    This part is beeing enforced with this trigger.
+    \lstinputlisting[language=SQL,frame=single,numbers=left,numberstyle=\tiny]{task1_5.1.sql}
 
 \end{itemize}
 
