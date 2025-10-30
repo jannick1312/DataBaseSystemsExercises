@@ -78,6 +78,28 @@
 \printfront
 
 \task{}
+\task{}
+\begin{enumerate}[a)]
+    \item \texttt{AHV $\rightarrow$ (FullName, Birthday, Zip, country)} \newline
+        \texttt{FullName $\rightarrow$ (FirstName, LastName)} \newline
+        \texttt{Birthday $\rightarrow$ YearOfBirth} \newline
+        \texttt{(County, Zip) $\rightarrow$ City}
+
+    The \texttt{AHV} uniquely identifies each resident. From these attributes, all others can be derived transitively:
+    \texttt{FullName} determines \texttt{(FirstName, LastName)}, \texttt{Birthday} determines \texttt{YearOfBirth}, and \texttt{(Country, Zip)} determines \texttt{City}.
+    We thought about including \texttt{(Country, City) $\rightarrow$ Zip} but there are cities with multiple zips (Zürich for example) and that's why we did not include this dependency.
+
+
+    \item With this functional dependencies we compute the attribute closure for \texttt{AHV}. \texttt{F$^+$} is \texttt{(AHV, FullName, Birthday, Zip, Country, FirstName, LastName, YearOfBirth, City) \newline = sch(Resident)}. Since no subset of \texttt{AHV} determines all attributes, \texttt{AHV} is minimal and therefore the only candidate key.
+    
+
+    \item The relation Resident is in 2NF, since the only candidate key is AHV and therefore no partial dependencies on a subset of a composite key can exist. It is not in Third Normal Form, because there are several transitive dependencies. For example: \texttt{AHV $\rightarrow$ (Zip, country)} and \texttt{(County, Zip) $\rightarrow$ City}, hence City is transitively dependent on AHV.
+    Version in 3NF: \newline
+    \texttt{Resident(\uline{AHV}, \uwave{FullName}, \uwave{Birthday}, \uwave{Zip, Country})} \newline
+    \texttt{Name(\uline{FullName}, FirstName, LastName)} \newline
+    \texttt{Birthday(\uline{Birthday}, YearOfBirth)} \newline
+    \texttt{Location(\uline{Zip, Country}, City)} 
+\end{enumerate}
 
 \task{}
 
