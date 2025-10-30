@@ -117,6 +117,11 @@
 \begin{enumerate}[a)]
     \item \texttt{\{\{A, C\}, \{A, B\}\}}
     \item 
+    \begin{enumerate}[i]
+        \item S is in 2NF because in FD1, neither \texttt{A} nor \texttt{B} alone determine \texttt{D} and \texttt{C} is in the candidate keys. Also in FD2, although \texttt{C} is a proper subset of a candidate key, B is a primary key and therefore all rules for 2NF hold true.
+        \item S is also in 2NF because in FD1, \texttt{{A,B}} is a candidate key and therefore a superkey and therefore 2NF is satisfied. Because \texttt{C} alone is not a superkey, but \texttt{B} is a prime key, this FD also satisfies 3NF.
+        \item However, because \texttt{C} alone is not a superkey, it does not satisfie FD2 and therefore is not a BCNF.
+    \end{enumerate}
 \end{enumerate}
 
 \task{}
