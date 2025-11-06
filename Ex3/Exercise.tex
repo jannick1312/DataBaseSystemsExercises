@@ -77,7 +77,7 @@
 
 \printfront
 
-\task{}
+\task{} %Task 1
 \begin{enumerate}[a)]
     \item \texttt{AHV $\rightarrow$ (FullName, Birthday, Zip, country)} \newline
         \texttt{FullName $\rightarrow$ (FirstName, LastName)} \newline
@@ -100,7 +100,7 @@
     \texttt{Location(\uline{Zip, Country}, City)} 
 \end{enumerate}
 
-\task{}
+\task{}  %Task 2
 \begin{enumerate}[a)]
     \item \texttt{\{\{A, B, C\}, \{A, C, D\}\}}
     \item 
@@ -113,7 +113,7 @@
     \end{enumerate}
 \end{enumerate}
 
-\task{}
+\task{}  %Task 3
 \begin{enumerate}[a)]
     \item \texttt{\{\{A, C\}, \{A, B\}\}}
     \item 
@@ -124,8 +124,240 @@
     \end{enumerate}
 \end{enumerate}
 
-\task{}
+\task{} %Task 4
 
-\task{}
+\task{} %Task 5
+\begin{enumerate}[a)]
+    %.........5a...........
+    \item \textbf{Task 5(a) – Candidate Keys of Relation \texttt{U}}
+    \textbf{Given:}  
+    Functional dependencies:
+    \[
+    \{\, \texttt{CU} \to \texttt{D},\; \texttt{D} \to \texttt{E,V,W,U,A},\; \texttt{U} \to \texttt{B},\; \texttt{V} \to \texttt{A} \,\}.
+    \]
 
+    \textbf{Identify attributes that must be in every key}  
+    No functional dependency determines \texttt{C},  
+    therefore \texttt{C} must be included in every candidate key.
+
+    \textbf{Determine attribute closures}  
+    \begin{itemize}
+      \item For \texttt{\{C,U\}}:  
+        From \texttt{CU → D} we obtain \texttt{D}.  
+        Then, \texttt{D → E,V,W,U,A} and \texttt{U → B}.  
+        Hence,
+        \[
+        (\texttt{CU})^+ = \{\texttt{A,B,C,D,E,U,V,W}\}.
+        \]
+        $\Rightarrow$ \texttt{\{C,U\}} is a superkey.  
+        Since neither \texttt{C}$^+$ nor \texttt{U}$^+$ contains all attributes,  
+        \texttt{\{C,U\}} is \textbf{minimal} and therefore a \textbf{candidate key}.
+
+      \item For \texttt{\{C,D\}}:  
+        From \texttt{D → U,A,E,V,W} and \texttt{U → B} we obtain
+        \[
+        (\texttt{CD})^+ = \{\texttt{A,B,C,D,E,U,V,W}\}.
+        \]
+        $\Rightarrow$ \texttt{\{C,D\}} is a superkey.  
+        Since neither \texttt{C} nor \texttt{D} alone determines all attributes,  
+        it is also \textbf{minimal} and thus a \textbf{candidate key}.
+    \end{itemize}
+
+    \textbf{Check other combinations}  
+    Other sets such as \texttt{\{C,V\}} or \texttt{\{C,A\}} do not determine \texttt{U} or \texttt{D},  
+    and therefore cannot be superkeys.  
+    Supersets of \texttt{\{C,U\}} or \texttt{\{C,D\}} are not minimal.
+
+    \textbf{Result:}
+    \[
+    \boxed{\text{The candidate keys of } \texttt{U} \text{ are } \texttt{\{C,U\}} \text{ and } \texttt{\{C,D\}}.}
+    \]
+
+
+  %.........5b...........
+\item 
+\textbf{Given:}  
+Relation \texttt{U(A,B,C,D,E,U,V,W)} with functional dependencies  
+\[
+\{\, \texttt{CU} \to \texttt{D},\; \texttt{D} \to \texttt{E,V,W,U,A},\; \texttt{U} \to \texttt{B},\; \texttt{V} \to \texttt{A} \,\}.
+\]
+
+\textbf{Check 1NF}  
+All attribute domains are atomic.  
+\[
+\Rightarrow \texttt{U} \text{ is in 1NF.}
+\]
+
+\textbf{Check 2NF}  
+A relation is in 2NF if every non-prime attribute is fully functionally dependent on each candidate key.  
+Candidate keys are \texttt{\{C,U\}} and \texttt{\{C,D\}}.
+
+\begin{itemize}
+  \item \texttt{U → B}: \texttt{U} is only part of key \texttt{\{C,U\}} $\Rightarrow$ partial dependency.
+  \item \texttt{D → E,V,W}: \texttt{D} is only part of key \texttt{\{C,D\}} $\Rightarrow$ partial dependency.
+\end{itemize}
+
+$\Rightarrow$ \textit{Violates 2NF.}
+
+\textbf{Check 3NF}  
+A relation is in 3NF if, for every FD \texttt{X → A}, either \texttt{X} is a superkey or \texttt{A} is a key attribute.  
+Since \texttt{D → E,V,W} and \texttt{U → B} hold, and neither \texttt{D} nor \texttt{U} are superkeys,  
+these dependencies violate 3NF.
+
+\[
+\Rightarrow \texttt{U} \text{ is not in 3NF.}
+\]
+
+\textbf{Check BCNF}  
+In BCNF, every determinant must be a superkey.  
+Dependencies \texttt{D → E,V,W}, \texttt{U → B}, and \texttt{V → A} violate this rule.  
+\[
+\Rightarrow \texttt{U} \text{ is not in BCNF.}
+\]
+
+\textbf{Result:}  
+Since \texttt{U} violates 2NF (and therefore 3NF and BCNF), it is only in:
+\[
+\boxed{\text{First Normal Form (1NF)}.}
+\]
+
+
+  %.........5c...........
+\item 
+\textbf{Minimal Cover (Canonical Form)}  
+
+Given functional dependencies (already minimal on both sides):
+\[
+\{\, \texttt{CU} \to \texttt{D},\;
+    \texttt{D} \to \texttt{E,V,W,U,A},\;
+    \texttt{U} \to \texttt{B},\;
+    \texttt{V} \to \texttt{A} \,\}.
+\]
+No attribute on the left–hand side can be removed (neither \texttt{C} nor \texttt{U} in \texttt{CU→D}),  
+and none of the dependencies is implied by the others.  
+Hence, this is already the \textbf{minimal cover}.
+
+\medskip
+\textbf{3NF Synthesis}
+
+For each determinant, create one relation that includes all attributes from its FD group.  
+Since one of them (\texttt{R\textsubscript{CU}}) contains the candidate key \texttt{\{C,U\}},  
+the resulting decomposition will be lossless and dependency-preserving.
+
+\[
+\begin{aligned}
+\texttt{R\textsubscript{CU}(C,U,D)} &\quad\text{from }\texttt{CU→D}\\
+\texttt{R\textsubscript{D}(D,U,A,E,V,W)} &\quad\text{from }\texttt{D→U,A,E,V,W}\\
+\texttt{R\textsubscript{U}(U,B)} &\quad\text{from }\texttt{U→B}\\
+\texttt{R\textsubscript{V}(V,A)} &\quad\text{from }\texttt{V→A}
+\end{aligned}
+\]
+
+Since \texttt{R\textsubscript{CU}} includes the key \texttt{\{C,U\}},  
+the natural join of all projections is \textbf{lossless},  
+and all dependencies are \textbf{preserved} (property of the 3NF-synthesis algorithm).
+
+\medskip
+\textbf{Normal Forms of the Resulting Relations}
+
+\begin{itemize}
+  \item \texttt{R\textsubscript{CU}(C,U,D)}  
+        – Contains FDs \texttt{CU→D} and \texttt{D→U}.  
+        – Satisfies 3NF (each non-trivial FD has either a key or a key attribute on the RHS).  
+        – Not in BCNF because \texttt{D→U} holds while \texttt{D} is not a key.
+
+  \item \texttt{R\textsubscript{D}(D,U,A,E,V,W)}  
+        – \texttt{D} is a key for all its dependencies → BCNF.  
+        – However, \texttt{V→A} also holds globally and both attributes occur here,  
+          so to maintain BCNF we separate \texttt{R\textsubscript{V}(V,A)}.
+
+  \item \texttt{R\textsubscript{U}(U,B)} – \texttt{U} is key → BCNF.  
+  \item \texttt{R\textsubscript{V}(V,A)} – \texttt{V} is key → BCNF.
+\end{itemize}
+
+\medskip
+\textbf{Variant B (cleaner BCNF form):}  
+Split \texttt{R\textsubscript{D}} into individual relations for each RHS attribute:
+\[
+\texttt{R\textsubscript{DU}(D,U)},\;
+\texttt{R\textsubscript{DA}(D,A)},\;
+\texttt{R\textsubscript{DE}(D,E)},\;
+\texttt{R\textsubscript{DV}(D,V)},\;
+\texttt{R\textsubscript{DW}(D,W)}.
+\]
+Each of these is in BCNF because \texttt{D} is the key in its relation.  
+\texttt{R\textsubscript{CU}(C,U,D)} remains in 3NF (not BCNF).  
+\texttt{R\textsubscript{U}(U,B)} and \texttt{R\textsubscript{V}(V,A)} are BCNF.
+
+\medskip
+\textbf{Final Normal Forms}
+
+\[
+\begin{aligned}
+\texttt{R\textsubscript{CU}(C,U,D)} &\rightarrow \text{3NF (not BCNF)}\\
+\texttt{R\textsubscript{DU}(D,U)},\;
+\texttt{R\textsubscript{DA}(D,A)},\;
+\texttt{R\textsubscript{DE}(D,E)},\;
+\texttt{R\textsubscript{DV}(D,V)},\;
+\texttt{R\textsubscript{DW}(D,W)} &\rightarrow \text{BCNF}\\
+\texttt{R\textsubscript{U}(U,B)},\;
+\texttt{R\textsubscript{V}(V,A)} &\rightarrow \text{BCNF}
+\end{aligned}
+\]
+
+\textbf{Result:}  
+The decomposition is \textbf{lossless} (a key relation is retained)  
+and \textbf{dependency-preserving}.  
+All relations are in BCNF except \texttt{R\textsubscript{CU}},  
+which remains in 3NF to ensure dependency preservation.
+\[
+\boxed{\text{Highest possible normal form with dependency preservation: 3NF.}}
+\]
+
+ %.........5d...........
+ \item 
+\textbf{Goal:} Find a lossless BCNF decomposition of \texttt{U} and compare it to the 3NF decomposition from (c).
+
+\textbf{Observation.} In the 3NF design of (c), the only non-BCNF relation is \texttt{R\textsubscript{CU}(C,U,D)} due to the dependency \texttt{D → U} with \texttt{D} not being a key of \texttt{R\textsubscript{CU}}.
+
+\medskip
+\textbf{BCNF Step.} Decompose \texttt{R\textsubscript{CU}(C,U,D)} using \texttt{D → U}:
+\[
+\texttt{R\textsubscript{CU}(C,U,D)} \;\Rightarrow\; 
+\texttt{R\textsubscript{CD}(C,D)} \quad \text{and} \quad \texttt{R\textsubscript{DU}(D,U)}.
+\]
+This split is \textbf{lossless} because the common attribute \texttt{D} is a key in \texttt{R\textsubscript{DU}}.
+
+\medskip
+\textbf{Final BCNF schema.} Starting from the 3NF set in (c) and replacing \texttt{R\textsubscript{CU}} by its BCNF split, we obtain:
+\[
+\begin{aligned}
+&\texttt{R\textsubscript{CD}(C,D)},\;
+\texttt{R\textsubscript{DU}(D,U)},\;
+\texttt{R\textsubscript{DA}(D,A)},\;
+\texttt{R\textsubscript{DE}(D,E)},\;
+\texttt{R\textsubscript{DV}(D,V)},\;
+\texttt{R\textsubscript{DW}(D,W)},\\
+&\texttt{R\textsubscript{U}(U,B)},\;
+\texttt{R\textsubscript{V}(V, A)}.
+\end{aligned}
+\]
+All these relations are in \textbf{BCNF}:
+\begin{itemize}
+  \item Each \texttt{R\textsubscript{D*}} has determinant \texttt{D} which is a key in that relation.
+  \item \texttt{R\textsubscript{U}(U,B)} and \texttt{R\textsubscript{V}(V,A)} have keys \texttt{U} and \texttt{V}, respectively.
+  \item \texttt{R\textsubscript{CD}(C,D)} contains no nontrivial projected FD with a non-key LHS, hence BCNF.
+\end{itemize}
+
+\textbf{Losslessness.} Each BCNF split is lossless (decomposition by a dependency \texttt{X→Y} is lossless when the common part contains a key of one component). Since we only refined \texttt{R\textsubscript{CU}} by such a split, the overall join remains \textbf{lossless}.
+
+\medskip
+\textbf{Dependency preservation and comparison to (c).}
+\begin{itemize}
+  \item In (c), the 3NF design preserves all original dependencies, notably \texttt{CU → D} in \texttt{R\textsubscript{CU}}.
+  \item In the BCNF design above, \texttt{CU → D} is \emph{not} preserved in any single relation (it can only be checked via a join), while the other dependencies (\texttt{D → U,A,E,V,W}, \texttt{U → B}, \texttt{V → A}) remain preserved in their respective relations.
+\end{itemize}
+
+\textbf{Answer.} The BCNF decomposition differs from (c) by replacing \texttt{R\textsubscript{CU}(C,U,D)} with \texttt{R\textsubscript{CD}(C,D)} and \texttt{R\textsubscript{DU}(D,U)}. It is \textbf{lossless} but not fully \textbf{dependency-preserving} (the FD \texttt{CU → D} is lost as a directly enforceable dependency). All resulting relations are in \textbf{BCNF}.
+\end{enumerate}
 \end{document}
