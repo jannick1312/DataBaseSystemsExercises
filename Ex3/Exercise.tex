@@ -126,6 +126,32 @@
 
 \task{} %Task 4
 
+\begin{enumerate}[a)]
+  \item Candidate keys:\\
+        $A^+ = {A,B,C,D,U}$ not all attributes, so not candidate key alone.\\
+        $(A,E)^+ = {A,B,C,D,E,U,V,W}$ all attributes, so candidate key {A,E}.\\
+        $(A,W)^+ = {A,B,C,D,E,U,V,W}$ all attributes, so candidate key {A,W}.\\
+        because W and E also not candidate key alone, $\{A,E\}$ and $\{A,W\}$ both minimal candidate keys.
+        Because A only on left side, A needs to be part of all candidate keys.
+  \item All possible functional dependencies:\\
+      \begin{itemize}
+        \item $A \to B$
+        \item $A \to C$
+        \item $A \to D$
+        \item $A \to U$
+        \item $A \to \{B,C,D,U\}$ (Union)
+        \item $A,E \to V,W$ (Pseudotransistivity from $A \to D$ and $D,E \to V,W$)
+        \item $A,E \to V$
+        \item $A,E \to W$
+        \item ($D,W \to V,W$ (Pseudotransistivity from $W \to E$ and $D,E \to V,W$))
+        \item $A,W \to W,V$ (Pseudotransistivity from $A \to D$ and $D,W \to V,W$)
+        \item $A,W \to W$
+        \item $A,W \to V$
+        \item $A,W \to E$ (Transistivity from $A,W \to W$ and $W \to E$)
+      \end{itemize}
+
+\end{enumerate}
+
 \task{} %Task 5
 \begin{enumerate}[a)]
     %.........5a...........
