@@ -97,10 +97,291 @@
 \newpage
 \task{}
 
-\task{}
+a)
 
-\task{}
+We first determine how many tuples fit on one data page and then how many pages
+are required per relation.
+The page size is $4096\,\mathrm{B}$, of which $96\,\mathrm{B}$ are reserved for the page header.
+Thus, the usable space per page is
+\[
+4096\,\mathrm{B} - 96\,\mathrm{B} = 4000\,\mathrm{B}.
+\]
+Since data pages are filled only up to $90\%$, the effective capacity for tuples is
+\[
+0.9 \cdot 4000\,\mathrm{B} = 3600\,\mathrm{B}.
+\]
+Each tuple additionally requires one slot array pointer of $6\,\mathrm{B}$. Hence, the
+effective record size is
+\[
+\text{record size} = \text{tuple size} + 6\,\mathrm{B}.
+\]
+The number of tuples per page is then
+\[
+\text{tuples per page} = \left\lfloor \frac{3600}{\text{record size}} \right\rfloor,
+\]
+and the number of pages is
+\[
+\text{pages} = \left\lceil \frac{\#\text{tuples}}{\text{tuples per page}} \right\rceil.
+\]
+\paragraph{Movie}
+Average tuple size: $100\,\mathrm{B}$, record size: $100 + 6 = 106\,\mathrm{B}$.
+\[
+\text{tuples per page} = \left\lfloor \frac{3600}{106} \right\rfloor = 33,
+\qquad
+\text{pages} = \left\lceil \frac{1000}{33} \right\rceil = 31.
+\]
 
-\task{}
+\paragraph{Scene}
+Average tuple size: $50\,\mathrm{B}$, record size: $50 + 6 = 56\,\mathrm{B}$.
+\[
+\text{tuples per page} = \left\lfloor \frac{3600}{56} \right\rfloor = 64,
+\qquad
+\text{pages} = \left\lceil \frac{10000}{64} \right\rceil = 157.
+\]
+
+\paragraph{Person}
+Average tuple size: $40\,\mathrm{B}$, record size: $40 + 6 = 46\,\mathrm{B}$.
+\[
+\text{tuples per page} = \left\lfloor \frac{3600}{46} \right\rfloor = 78,
+\qquad
+\text{pages} = \left\lceil \frac{6000}{78} \right\rceil = 77.
+\]
+
+\paragraph{Actor}
+Same tuple size as \texttt{Person}, hence same record size:
+$40 + 6 = 46\,\mathrm{B}$.
+\[
+\text{tuples per page} = \left\lfloor \frac{3600}{46} \right\rfloor = 78,
+\qquad
+\text{pages} = \left\lceil \frac{30000}{78} \right\rceil = 385.
+\]
+
+\begin{center}
+\begin{tabular}{|l||c|c|}
+\hline
+Relation & Tuples per page & Number of pages \\
+\hline\hline
+\texttt{Movie}  & 33 & 31  \\ \hline
+\texttt{Scene}  & 64 & 157 \\ \hline
+\texttt{Person} & 78 & 77  \\ \hline
+\texttt{Actor}  & 78 & 385 \\ \hline
+\end{tabular}
+\end{center}
+
+
+b) 
+
+The page size is $4096\,\mathrm{B}$ with a page header of $96\,\mathrm{B}$, thus
+\[
+4096\,\mathrm{B} - 96\,\mathrm{B} = 4000\,\mathrm{B}
+\]
+are available per page. Index pages are filled up to $70\%$, hence the effective
+capacity is
+\[
+C = 0.7 \cdot 4000\,\mathrm{B} = 2800\,\mathrm{B}.
+\]
+Pointers in the B$^+$-tree and tuple identifiers (TIDs) have a length of $6\,\mathrm{B}$,
+data type \texttt{NUMBER} has $10\,\mathrm{B}$, and the average \texttt{MovieTitle}
+length is $90\,\mathrm{B}$.
+
+\paragraph{MovieIDIdx}
+
+Key size $k = 10\,\mathrm{B}$.  
+In a leaf node, one entry consists of $(\text{key}, \text{TID})$ with size
+$10 + 1 \cdot 6 = 16\,\mathrm{B}$. We reserve $2$ pointers of $6\,\mathrm{B}$ on each
+leaf page (e.g.\ sibling pointers):
+\[
+t_{\text{leaf}}
+ = \left\lfloor
+   \frac{(4096 - 96 - (2 \cdot 6)) \cdot 0.7}{10 + (1 \cdot 6)}
+   \right\rfloor
+ = 174.
+\]
+For inner nodes, one entry consists of $(\text{key}, \text{child pointer})$ of size
+$10 + 6 = 16\,\mathrm{B}$, plus an additional pointer of $6\,\mathrm{B}$:
+\[
+e_i
+ = \left\lfloor
+   \frac{(4096 - 96) \cdot 0.7 - 6}{10 + 6}
+   \right\rfloor
+ = 174.
+\]
+With $1000$ movies, the number of leaf nodes is
+\[
+n_{\text{leaf}}
+ = \left\lceil \frac{1000}{174} \right\rceil
+ = 6.
+\]
+An inner node can point to $e_i + 1 = 175$ children, thus a single root node suffices:
+\[
+n_{\text{inner}} = \left\lceil \frac{6}{175} \right\rceil = 1.
+\]
+The total index size is
+\[
+i_{\text{size}} = (6 + 1) \cdot 4 = 28\,\text{KiB}.
+\]
+
+\paragraph{MovieTitleIdx}
+
+Key size $k = 90\,\mathrm{B}$.  
+Leaf entry size: $90 + 1 \cdot 6 = 96\,\mathrm{B}$:
+\[
+t_{\text{leaf}}
+ = \left\lfloor
+   \frac{(4096 - 96 - (2 \cdot 6)) \cdot 0.7}{90 + (1 \cdot 6)}
+   \right\rfloor
+ = 29.
+\]
+Inner node:
+\[
+e_i
+ = \left\lfloor
+   \frac{(4096 - 96) \cdot 0.7 - 6}{90 + 6}
+   \right\rfloor
+ = 29.
+\]
+With $1000$ movies:
+\[
+n_{\text{leaf}}
+ = \left\lceil \frac{1000}{29} \right\rceil
+ = 35.
+\]
+Each inner node can have up to $e_i + 1 = 30$ children, so the number of inner nodes
+one level above the leaves is
+\[
+n_{\text{inner1}} = \left\lceil \frac{35}{30} \right\rceil = 2,
+\]
+and with one root node above:
+\[
+n_{\text{inner2}} = \left\lceil \frac{2}{30} \right\rceil = 1,
+\qquad
+n_{\text{inner}} = 2 + 1 = 3.
+\]
+Thus, the total index size is
+\[
+i_{\text{size}} = (35 + 3) \cdot 4 = 152\,\text{KiB}.
+\]
+
+\paragraph{ActorIdx}
+
+There are $30000$ tuples in \texttt{Actor} and $6000$ tuples in \texttt{Person},
+so on average there are
+\[
+r_k = \frac{30000}{6000} = 5
+\]
+\texttt{Actor} entries per \texttt{PID}.  
+In the leaf nodes of \texttt{ActorIdx}, we store one entry per distinct key \texttt{PID},
+together with a list of $r_k$ TIDs. Hence, the average leaf entry size is
+\[
+10 + r_k \cdot 6 = 10 + 5 \cdot 6 = 40\,\mathrm{B}.
+\]
+We again reserve $2$ pointers of $6\,\mathrm{B}$ per leaf page:
+\[
+t_{\text{leaf}}
+ = \left\lfloor
+   \frac{(4096 - 96 - (2 \cdot 6)) \cdot 0.7}{10 + (5 \cdot 6)}
+   \right\rfloor
+ = 69.
+\]
+For inner nodes, we only store $(\text{key}, \text{child pointer})$:
+\[
+e_i
+ = \left\lfloor
+   \frac{(4096 - 96) \cdot 0.7 - 6}{10 + 6}
+   \right\rfloor
+ = 174.
+\]
+We have $6000$ distinct keys (PIDs), hence
+\[
+n_{\text{leaf}}
+ = \left\lceil \frac{6000}{69} \right\rceil
+ = 87.
+\]
+An inner node can point to up to $e_i + 1 = 175$ children, so
+\[
+n_{\text{inner}}
+ = \left\lceil \frac{87}{175} \right\rceil
+ = 1.
+\]
+The total index size is therefore
+\[
+i_{\text{size}} = (87 + 1) \cdot 4 = 352\,\text{KiB}.
+\]
+
+\begin{center}
+\begin{tabular}{|l||c|c||c|c||c|}
+\hline
+ & \multicolumn{2}{c||}{Entries per} & \multicolumn{2}{c||}{Number of} &
+ \multicolumn{1}{c|}{Index Size} \\
+Index & leaf nodes & inner nodes & leaf nodes & inner nodes & [KiB] \\
+\hline\hline
+\texttt{MovieIDIdx}     & 174 & 174 & 6   & 1 & 28  \\ \hline
+\texttt{MovieTitleIdx}  & 29  & 29  & 35  & 3 & 152 \\ \hline
+\texttt{ActorIdx}       & 69  & 174 & 87  & 1 & 352 \\ \hline
+\end{tabular}
+\end{center}
+
+\newpage
+
+c)
+
+\[
+\texttt{SELECT * FROM Movie WHERE MovieID = 4711;}
+\]
+\[
+\texttt{SELECT * FROM Movie WHERE MovieTitle = 'Opelgang';}
+\]
+\[
+\texttt{SELECT * FROM Actor WHERE PID = 1199;}
+\]
+
+\paragraph{Movie.MovieID}
+
+For \texttt{MovieIDIdx} we have $n_{\text{leaf}} = 6$ leaf nodes and a maximum
+fanout of $175$ children per inner node. Hence, the height of the B$^+$-tree
+(including root and leaves) is
+\[
+h = \left\lceil \log_{175} 6 \right\rceil + 1 = 2 .
+\]
+Thus we access $h = 2$ index pages plus one data page in \texttt{Movie}:
+\[
+\text{total page accesses} = 2 + 1 = 3.
+\]
+
+\paragraph{Movie.MovieTitle}
+
+For \texttt{MovieTitleIdx} we have $n_{\text{leaf}} = 35$ leaf nodes and a fanout
+of $30$ children per inner node. The height is
+\[
+h = \left\lceil \log_{30} 35 \right\rceil + 1 = 3 .
+\]
+Again, we access one data page in \texttt{Movie}:
+\[
+\text{total page accesses} = 3 + 1 = 4.
+\]
+
+\paragraph{Actor.PID}
+
+For \texttt{ActorIdx} we have $n_{\text{leaf}} = 87$ leaf nodes and a fanout of
+$175$ children per inner node. The height is
+\[
+h = \left\lceil \log_{175} 87 \right\rceil + 1 = 2 .
+\]
+On average there are $r_k = 5$ \texttt{Actor} tuples per \texttt{PID}, so we expect
+to access $5$ data pages in \texttt{Actor}:
+\[
+\text{total page accesses} = 2 + 5 = 7.
+\]
+
+\begin{center}
+\begin{tabular}{|l|l||c|}
+\hline
+Relation & Attribute & Page accesses \\
+\hline\hline
+\texttt{Movie} & \texttt{MovieID}    & 3 \\ \hline
+\texttt{Movie} & \texttt{MovieTitle} & 4 \\ \hline
+\texttt{Actor} & \texttt{PID}        & 7 \\ \hline
+\end{tabular}
+\end{center}
 
 \end{document}
