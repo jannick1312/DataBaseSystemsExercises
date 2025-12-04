@@ -17,10 +17,10 @@
     Attribute $B$ is not uniformly distributed:\\
     - $40\,000$ tuples are uniformly distributed over the values $[0..99]$ (100 values)\\
     The tuples are spread uniformly across $100$ values so each value occurs $\frac{40\,000}{100} = 400$ times.\\
-    Therefore $\mathbf{FF(B = 10) = \frac{400}{50\,000} = 0.008}$.\\
+    Therefore $\mathbf{FF(B = 10) = \frac{400}{50\,000}}$.\\
     - $10\,000$ tuples are uniformly distributed over the values $[100..999]$ (900 values)\\
     Here the tuples are spread uniformly across $900$ different values so each value occurs $\frac{10\,000}{900} \approx 11.11$ times.\\
-    Therefore $\mathbf{FF(B = 500) = \frac{10\,000/900}{50\,000}\approx 0.000222}$.
+    Therefore $\mathbf{FF(B = 500) = \frac{10\,000/900}{50\,000}}$.
 \end{enumerate}
 
 \begin{enumerate}
@@ -40,14 +40,16 @@ $\mathbf{\Longrightarrow C(A=10) = C(A=500) = C(B=10) = C(B=500) = 123}$
 \item \textbf{Indirect B+ tree on A (Layout RA)}
 
 Leaf capacity:
-$ t_{\text{leaf}} = \left\lfloor \frac{(page - head - 2 s_p)\cdot f_{\text{index}}}{k + r_k \cdot s_p} \right\rfloor \Longrightarrow \underline{t_{\text{leaf}} = 18} $\\
-(with $k = s_a$, $n_k = 1000$, $r_k = 50$)
+$ \left\lceil \frac{(page - head - 2 \cdot p_{leaf})\cdot f_{\text{index}}}{k + r_k \cdot p_{rec}} \right\rceil \Longrightarrow \underline{t_{\text{leaf}} = 18} $\\
+(with $k = s_a$, $r_k = 50, p_{leaf} = p_{rec} = s_p $ )
 
 Number of leaf pages: 
-$\lceil n_k / t_{\text{leaf}} \rceil \Longrightarrow \underline{n_{\text{leaf}} = 56}$
+$\lceil \frac{n_k}{t_{\text{leaf}}} \rceil \Longrightarrow \underline{n_{\text{leaf}} = 56}$\\
+(with $n_k = 1000$)
 
 Inner node capacity: 
-$\left\lfloor \frac{(page - head)\cdot f_{\text{index}} - s_p}{k + s_p} \right\rfloor \Longrightarrow \underline{e_i = 474}$
+$\left\lceil \frac{((page - head)\cdot f_{\text{index}}) - p}{k + p} \right\rceil \Longrightarrow \underline{e_i = 474}$\\
+(with $p = s_p$)
 
 Height:
 $\lceil \log_{e_i + 1}(n_{\text{leaf}})\rceil + 1  \Longrightarrow \mathbf{h = 2}$
@@ -100,6 +102,38 @@ $\Longrightarrow \mathbf{ C(B=10)=C(B=500)=123 }$
 
 \item \textbf{Combined B+ tree on (A,B) (Layout RC)}
 
+Combined search key: 
+$ s_A + s_B \Longrightarrow \underline{k = 12}$.
+
+Number of distinct key pairs:
+$ 1000 \cdot 1000 \Longrightarrow \underline{n_k = 1\,000\,000}$.
+
+Average number of tuples per key pair:
+$ \frac{Card(R)}{n_k} \Longrightarrow \underline{r_k = 0.05}$.
+
+Leaf capacity (page-layout indirect index):
+$\left\lceil \frac{(\text{page} - \text{head} - 2 \cdot p_{\text{leaf}})\cdot f_{\text{index}}}{k + r_k \cdot p_{\text{rec}}} \right\rceil
+\Longrightarrow \underline{t_{\text{leaf}} = 462}. $
+
+Number of leaf pages:
+$
+= \left\lceil \frac{n_k}{t_{\text{leaf}}} \right\rceil
+ \Longrightarrow \underline{n_{\text{leaf}} = 2165} $
+
+Inner node capacity:
+$ \left\lceil \frac{((\text{page} - \text{head})\cdot f_{\text{index}}) - p}{k + p} \right\rceil
+\Longrightarrow \underline{e_i = 316}. $
+
+Height of the index:
+$ \left\lceil \log_{e_i + 1}(n_{\text{leaf}}) \right\rceil + 1
+\mathbf{\Longrightarrow h = 3}$
+
+Cost for queries on $A$:
+$ (h - 1) + \left\lceil FF(A = a) \cdot n_{\text{leaf}} \right\rceil
+= \mathbf{\Longrightarrow C(A = 10) = C(A = 500) = 5}. $
+
+$B$ alone cannot use the combined index (no leading $A$):
+$\mathbf{\Longrightarrow C(B = 10) = C(B = 500) = 123}. $
 
 \end{enumerate}
 
@@ -112,5 +146,5 @@ Layout & A=10 & B=10 & A=500 & B=500 & Height \\ \hline\hline
 \texttt{RB}  & 123 & 2   & 123 & 2   & 2 \\ \hline
 \texttt{RAB} & 2   & 2   & 2   & 2   & 2 \\ \hline
 \texttt{RA\$}& 2   & 123 & 2   & 123 & 2 \\ \hline
-\texttt{RC}  & 2   & 123 & 2   & 123 & 2 \\ \hline
+\texttt{RC}  & 5   & 123 & 5   & 123 & 3 \\ \hline
 \end{tabular}
