@@ -1,0 +1,116 @@
+\begin{enumerate}[i]
+  \item Parameters given in the sheet:\\
+    \begin{tabular}{|c|c|c|} \hline \textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\ \hline 
+      Attribute size & $s_{\text{a}}$ & 6 B \\ 
+      Tuple size & $s_{\text{t}}$ & 12 B \\
+      Cardinality of R & Card(R) & 50\,000 \\ 
+      Page size & page & 8192 B \\ 
+      Fill degree (data pages) & $f_{\text{data}}$ & 0.9 \\ 
+      Fill degree (index pages) & $f_{\text{index}}$ & 0.7 \\ 
+      Page header & head & 48 B \\  
+      Pointer size & $s_{\text{p}}$ & 6 B \\
+      \hline \end{tabular}
+  \item \textbf{FF(A)}\\
+    Attribute A is uniformly distributed in [0..999], therefore $\mathbf{FF(A=a)=1/1000}$.
+
+  \item \textbf{FF(B)}\\
+    Attribute $B$ is not uniformly distributed:\\
+    - $40\,000$ tuples are uniformly distributed over the values $[0..99]$ (100 values)\\
+    The tuples are spread uniformly across $100$ values so each value occurs $\frac{40\,000}{100} = 400$ times.\\
+    Therefore $\mathbf{FF(B = 10) = \frac{400}{50\,000} = 0.008}$.\\
+    - $10\,000$ tuples are uniformly distributed over the values $[100..999]$ (900 values)\\
+    Here the tuples are spread uniformly across $900$ different values so each value occurs $\frac{10\,000}{900} \approx 11.11$ times.\\
+    Therefore $\mathbf{FF(B = 500) = \frac{10\,000/900}{50\,000}\approx 0.000222}$.
+\end{enumerate}
+
+\begin{enumerate}
+
+\item \textbf{No index (Layout R)}
+
+Page-layout:
+$\frac{(\text{page} - \text{head}) \cdot f_{\text{data}}}{r_{\text{avg}} + p_{\text{slot}}} \Longrightarrow \underline{x = 407} $ \\ 
+(with $r_{\text{avg}} = s_t$ and $p_{\text{slot}} = s_p$)
+
+Number of data pages: 
+$\lceil Card(R) / x \rceil \Longrightarrow \underline{NPages(R) = 123} $
+
+Since there is no index:
+$\mathbf{\Longrightarrow C(A=10) = C(A=500) = C(B=10) = C(B=500) = 123}$
+
+\item \textbf{Indirect B+ tree on A (Layout RA)}
+
+Leaf capacity:
+$ t_{\text{leaf}} = \left\lfloor \frac{(page - head - 2 s_p)\cdot f_{\text{index}}}{k + r_k \cdot s_p} \right\rfloor \Longrightarrow \underline{t_{\text{leaf}} = 18} $\\
+(with $k = s_a$, $n_k = 1000$, $r_k = 50$)
+
+Number of leaf pages: 
+$\lceil n_k / t_{\text{leaf}} \rceil \Longrightarrow \underline{n_{\text{leaf}} = 56}$
+
+Inner node capacity: 
+$\left\lfloor \frac{(page - head)\cdot f_{\text{index}} - s_p}{k + s_p} \right\rfloor \Longrightarrow \underline{e_i = 474}$
+
+Height:
+$\lceil \log_{e_i + 1}(n_{\text{leaf}})\rceil + 1  \Longrightarrow \mathbf{h = 2}$
+
+Index-only selection cost: 
+$ (h - 1) + \lceil FF(A=a)\cdot n_{\text{leaf}} \rceil \Longrightarrow \mathbf{C(A=10)=C(A=500)=2 }$
+
+Queries on B require table scan:
+$ \Longrightarrow \mathbf{C(B=10)=C(B=500)=123} $
+
+\newpage
+
+\item \textbf{Indirect B+ tree on B (Layout RB)}
+
+The index structure parameters are the same as RA:\\
+$\Longrightarrow \underline{t_{\text{leaf}} = 18,\ n_{\text{leaf}} = 56,\ e_i = 474,\ }$
+
+Height:
+$\lceil \log_{e_i + 1}(n_{\text{leaf}})\rceil + 1  \Longrightarrow \mathbf{h = 2}$
+
+Queries on A require table scan:
+$ \Longrightarrow \mathbf{C(A=10)=C(A=500)=123 }$
+
+Index-only selection cost: 
+$ (h - 1) + \lceil FF(B=b)\cdot n_{\text{leaf}} \rceil \Longrightarrow \mathbf{C(B=10)=C(B=500)=2 }$
+
+\item \textbf{Two indirect indexes on A and B (Layout RAB)}
+
+Both RA and RB exist.
+
+Heights and Cost identical (to calculation of indexes):\\
+$\Longrightarrow \mathbf{h=2}$\\ 
+$\Longrightarrow \mathbf{C(A=10)=C(A=500)=2}$ \\
+$\Longrightarrow \mathbf{C(B=10)=C(B=500)=2}$
+
+\item \textbf{Clustered, direct index on A (Layout RA\$)}
+
+Means physically sorted by A $\rightarrow$ Leaf pages = table pages.
+
+The parameters are the same as before:\\
+$\Longrightarrow \underline{x = 407,\ n_{\text{leaf}} \rightarrow NPages(R) = 123,\ e_i = 474,\ }$
+
+Height:
+$\lceil \log_{e_i+1}(n_{\text{leaf}}) \rceil + 1 \Longrightarrow \mathbf{h = 2}$
+
+Cost for A:
+$ (h - 1) + \lceil FF(A=a)\cdot n_{\text{leaf}} \rceil \Longrightarrow \mathbf{C(A=10)=C(A=500)=2 }$\\
+B has no usable index:
+$\Longrightarrow \mathbf{ C(B=10)=C(B=500)=123 }$
+
+\item \textbf{Combined B+ tree on (A,B) (Layout RC)}
+
+
+\end{enumerate}
+
+Summary:\\     
+\begin{tabular}{|l||c|c|c|c||c|}
+\hline
+Layout & A=10 & B=10 & A=500 & B=500 & Height \\ \hline\hline
+\texttt{R}   & 123 & 123 & 123 & 123 & no index \\ \hline
+\texttt{RA}  & 2   & 123 & 2   & 123 & 2 \\ \hline
+\texttt{RB}  & 123 & 2   & 123 & 2   & 2 \\ \hline
+\texttt{RAB} & 2   & 2   & 2   & 2   & 2 \\ \hline
+\texttt{RA\$}& 2   & 123 & 2   & 123 & 2 \\ \hline
+\texttt{RC}  & 2   & 123 & 2   & 123 & 2 \\ \hline
+\end{tabular}
