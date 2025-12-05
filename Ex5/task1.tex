@@ -1,0 +1,78 @@
+\task{Relational Algebra and Operator Tree}
+
+We are given the relations
+\[
+U(a,b,c),\quad V(c,d,e),\quad W(e,f,g)
+\]
+and the following SQL query:
+\begin{verbatim}
+SELECT b, f
+FROM (
+  SELECT V.c, V.d, W.e, W.f, W.g
+  FROM V, W
+  WHERE V.e = W.e
+    AND f = 2
+    AND g = 10
+) 
+JOIN U ON U.c = V.c
+WHERE a LIKE 'Ben';
+\end{verbatim}
+
+\subsection{Relational algebra expression}
+
+A canonical translation of the query into relational algebra is:
+\[
+\pi_{b,f}\Bigl(
+  \sigma_{a \,\text{LIKE}\, 'Ben'}\bigl(
+    \bigl(
+      \pi_{V.c,\,V.d,\,W.e,\,W.f,\,W.g}\bigl(
+        \sigma_{V.e = W.e \,\land\, W.f = 2 \,\land\, W.g = 10}
+        (\,V \times W\,)
+      \bigr)
+    \bigr)
+    \Join_{U.c = V.c}
+    U
+  \bigr)
+\Bigr).
+\]
+
+\subsection{Algebraic operator tree}
+
+The corresponding algebraic operator tree is shown in
+Figure~\ref{fig:op-tree}.
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[nodes={draw, circle}, node distance=4em]
+    % Root: projection π_{b,f}
+    \node (pi1) {$\pi$};
+    \node[right=0.5em of pi1, draw=none] {$b, f$};
+
+    % Selection σ_{a LIKE 'Ben'}
+    \node[below of=pi1] (sigma1) {$\sigma$} edge (pi1);
+    \node[right=0.5em of sigma1, draw=none] {$a \text{ LIKE 'Ben'}$};
+
+    % Join ⨝_{U.c = V.c}
+    \node[below of=sigma1] (join1) {$\Join$} edge (sigma1);
+    \node[right=0.5em of join1, draw=none] {$U.c = V.c$};
+
+    % Left child of join1: relation U
+    \node[below left of=join1] (U) {U} edge (join1);
+
+    % Right child of join1: subtree (inner SELECT)
+    \node[below right of=join1] (pi2) {$\pi$} edge (join1);
+    \node[right=0.5em of pi2, draw=none] {$V.c, V.d, W.e, W.f, W.g$};
+
+    % σ_{V.e = W.e ∧ W.f = 2 ∧ W.g = 10}
+    \node[below of=pi2] (sigma2) {$\sigma$} edge (pi2);
+    \node[right=0.5em of sigma2, draw=none] {$V.e = W.e \land W.f = 2 \land W.g = 10$};
+
+    % × with children V and W
+    \node[below of=sigma2] (prod) {$\times$} edge (sigma2);
+    \node[below left of=prod] (V) {V} edge (prod);
+    \node[below right of=prod] (W) {W} edge (prod);
+  \end{tikzpicture}
+  \caption{Algebraic operator tree for the given SQL query.}
+  \label{fig:op-tree}
+\end{figure}
+
