@@ -1,4 +1,4 @@
-\task{Relational Algebra and Operator Tree}
+
 
 We are given the relations
 \[
@@ -18,9 +18,11 @@ JOIN U ON U.c = V.c
 WHERE a LIKE 'Ben';
 \end{verbatim}
 
-\subsection{Relational algebra expression}
+\setcounter{subtask}{0}
 
-A canonical translation of the query into relational algebra is:
+\subtask{Relational algebra and algebraic operator tree}
+
+A translation of the query into relational algebra is:
 \[
 \pi_{b,f}\Bigl(
   \sigma_{a \,\text{LIKE}\, 'Ben'}\bigl(
@@ -36,7 +38,6 @@ A canonical translation of the query into relational algebra is:
 \Bigr).
 \]
 
-\subsection{Algebraic operator tree}
 
 The corresponding algebraic operator tree is shown in
 Figure~\ref{fig:op-tree}.
@@ -74,5 +75,182 @@ Figure~\ref{fig:op-tree}.
   \end{tikzpicture}
   \caption{Algebraic operator tree for the given SQL query.}
   \label{fig:op-tree}
+\end{figure}
+
+
+\newpage
+
+\subtask{Query optimizer}
+
+
+We transform the canonical algebraic expression step by step using
+equivalence rules of the relational algebra. The goal is to push
+selections and projections as far down as possible and to replace
+Cartesian products plus join conditions by joins, in order to reduce
+the size of intermediate results.
+
+\paragraph{Rule 10 – Split selection with conjunction}
+
+\[
+\sigma_{P_1 \land P_2 \land P_3}(R)
+=
+\sigma_{P_1}\bigl(
+  \sigma_{P_2}\bigl(
+    \sigma_{P_3}(R)
+  \bigr)
+\bigr).
+\]
+
+This rule is used to turn the single selection
+\[
+\sigma_{V.e = W.e \,\land\, W.f = 2 \,\land\, W.g = 10}(V \times W)
+\]
+into a cascade of three selections, so that the conditions can later
+be pushed down independently.
+
+\paragraph{Rule 15 – Swap selection and Cartesian product}
+
+\[
+\sigma_{P}(R \times S)
+=
+\sigma_{P}(R) \times S
+\quad\text{if $P$ uses only attributes of $R$.}
+\]
+
+This rule is used to push the selections
+\(\sigma_{W.f = 2}\) and \(\sigma_{W.g = 10}\) from
+\(\sigma_{W.f = 2}(\sigma_{W.g = 10}(V \times W))\)
+down onto \(W\), since both conditions refer only to attributes of \(W\).
+
+\paragraph{Rule 22 – Combine selection and product into join}
+
+\[
+\sigma_{R.A = S.B}(R \times S)
+=
+R \Join_{R.A = S.B} S.
+\]
+
+This rule is used to replace
+\[
+\sigma_{V.e = W.e}\bigl(V \times W'\bigr)
+\]
+by the join
+\[
+V \Join_{V.e = W.e} W',
+\]
+where \(W' = \sigma_{W.f = 2}(\sigma_{W.g = 10}(W))\). This eliminates
+the large Cartesian product in favor of a join with already filtered
+\(W\).
+
+\paragraph{Rule 14 – Swap selection and join}
+
+\[
+\sigma_{P}(R \Join S)
+=
+\sigma_{P}(R) \Join S
+\quad\text{if $P$ uses only attributes of $R$.}
+\]
+
+This rule is used to pull the selection
+\(\sigma_{a \text{ LIKE 'Ben'}}\) down onto \(U\) in
+\[
+\sigma_{a \text{ LIKE 'Ben'}}\bigl(R \Join_{U.c = V.c} U\bigr)
+\;\equiv\;
+R \Join_{U.c = V.c} \sigma_{a \text{ LIKE 'Ben'}}(U),
+\]
+since the predicate involves only attribute \(a\) of relation \(U\).
+
+\paragraph{Rule 16 – Swap projection and join (projection push-down)}
+
+\[
+\pi_{Q}(R \Join_{P} S)
+=
+\pi_{Q}\bigl(
+  \pi_{Q_1}(R) \Join_{P} \pi_{Q_2}(S)
+\bigr),
+\]
+where \(Q_1\) and \(Q_2\) contain the attributes from \(Q\) and from the
+join predicate \(P\) that belong to each side.
+
+This rule is used to introduce projections on \(U\), \(V\), and \(W\) so
+that each relation only carries the attributes that are actually needed:
+
+\begin{itemize}
+  \item result attributes: \(b\) (from \(U\)) and \(f\) (from \(W\)),
+  \item join attributes: \(c\) on \(U\) and \(V\), \(e\) on \(V\) and \(W\),
+  \item selection attributes: \(a\) on \(U\); \(f\) and \(g\) on \(W\).
+\end{itemize}
+
+Thus we choose the minimal attribute sets
+\[
+U: \{a, b, c\}, \quad
+V: \{c, e\}, \quad
+W: \{e, f, g\},
+\]
+and obtain the optimized algebraic expression
+\[
+Q_{\text{opt}} =
+\pi_{b,f} \Bigl(
+  \bigl(
+    \pi_{c,e}(V)
+    \Join_{V.e = W.e}
+    \sigma_{W.f = 2 \,\land\, W.g = 10}
+    \bigl(\pi_{e,f,g}(W)\bigr)
+  \bigr)
+  \Join_{U.c = V.c}
+  \sigma_{a \text{ LIKE 'Ben'}}
+  \bigl(\pi_{a,b,c}(U)\bigr)
+\Bigr).
+\]
+
+In this form, all selections and projections are pushed down to the
+leaves, the Cartesian product is replaced by joins, and intermediate
+results are reduced.
+
+\medskip
+
+The corresponding optimized operator tree is:
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[nodes={draw, circle}, node distance=4em]
+    % Root: π_{b,f}
+    \node (pi_root) {$\pi$};
+    \node[right=0.5em of pi_root, draw=none] {$b, f$};
+
+    % Join U with the (V⋈W) part
+    \node[below of=pi_root] (join_uv) {$\Join$} edge (pi_root);
+    \node[right=0.5em of join_uv, draw=none] {$U.c = V.c$};
+
+    % Left branch: σ_{a LIKE 'Ben'}(π_{a,b,c}(U))
+    \node[below left of=join_uv] (pi_u) {$\pi$} edge (join_uv);
+    \node[right=0.5em of pi_u, draw=none] {$a, b, c$};
+
+    \node[below of=pi_u] (sigma_u) {$\sigma$} edge (pi_u);
+    \node[right=0.5em of sigma_u, draw=none] {$a \text{ LIKE 'Ben'}$};
+
+    \node[below of=sigma_u] (U) {U} edge (sigma_u);
+
+    % Right branch: (π_{c,e}(V)) ⋈ (σ_{f=2 ∧ g=10}(π_{e,f,g}(W)))
+    \node[below right of=join_uv] (join_vw) {$\Join$} edge (join_uv);
+    \node[right=0.5em of join_vw, draw=none] {$V.e = W.e$};
+
+    % Left child of join_vw: π_{c,e}(V)
+    \node[below left of=join_vw] (pi_v) {$\pi$} edge (join_vw);
+    \node[right=0.5em of pi_v, draw=none] {$c, e$};
+
+    \node[below of=pi_v] (V) {V} edge (pi_v);
+
+    % Right child of join_vw: σ_{f=2 ∧ g=10}(π_{e,f,g}(W))
+    \node[below right of=join_vw] (sigma_w) {$\sigma$} edge (join_vw);
+    \node[right=0.5em of sigma_w, draw=none] {$f = 2 \land g = 10$};
+
+    \node[below of=sigma_w] (pi_w) {$\pi$} edge (sigma_w);
+    \node[right=0.5em of pi_w, draw=none] {$e, f, g$};
+
+    \node[below of=pi_w] (W) {W} edge (pi_w);
+  \end{tikzpicture}
+  \caption{Optimized algebraic operator tree for the given SQL query.}
+  \label{fig:op-tree-optimized}
 \end{figure}
 

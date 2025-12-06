@@ -72,12 +72,24 @@
 
 \newcommand*{\TikZ}{Ti\textit{k}Z}
 
+% Custom subtask counter with roman numerals: i., ii., iii., ...
+\newcounter{subtask}
+\renewcommand{\thesubtask}{\alph{subtask}.}
+
+\newcommand{\subtask}[1]{%
+  \refstepcounter{subtask}%
+  \par\medskip
+  \noindent\textbf{\thesubtask\ #1}%
+  \par\medskip
+}
+
+
 
 \begin{document}
 
 \printfront
 
-\task{}
+\task{Relational Algebra and Operator Tree}
 \input{./task1.tex}
 \newpage
 \task{}
