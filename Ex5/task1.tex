@@ -89,7 +89,7 @@ selections and projections as far down as possible and to replace
 Cartesian products plus join conditions by joins, in order to reduce
 the size of intermediate results.
 
-\paragraph{Rule 10 – Split selection with conjunction}
+Rule 10 – Split selection with conjunction
 
 \[
 \sigma_{P_1 \land P_2 \land P_3}(R)
@@ -108,7 +108,7 @@ This rule is used to turn the single selection
 into a cascade of three selections, so that the conditions can later
 be pushed down independently.
 
-\paragraph{Rule 15 – Swap selection and Cartesian product}
+Rule 15 – Swap selection and Cartesian product
 
 \[
 \sigma_{P}(R \times S)
@@ -122,7 +122,7 @@ This rule is used to push the selections
 \(\sigma_{W.f = 2}(\sigma_{W.g = 10}(V \times W))\)
 down onto \(W\), since both conditions refer only to attributes of \(W\).
 
-\paragraph{Rule 22 – Combine selection and product into join}
+Rule 22 – Combine selection and product into join
 
 \[
 \sigma_{R.A = S.B}(R \times S)
@@ -142,7 +142,7 @@ where \(W' = \sigma_{W.f = 2}(\sigma_{W.g = 10}(W))\). This eliminates
 the large Cartesian product in favor of a join with already filtered
 \(W\).
 
-\paragraph{Rule 14 – Swap selection and join}
+Rule 14 – Swap selection and join
 
 \[
 \sigma_{P}(R \Join S)
@@ -160,7 +160,7 @@ R \Join_{U.c = V.c} \sigma_{a \text{ LIKE 'Ben'}}(U),
 \]
 since the predicate involves only attribute \(a\) of relation \(U\).
 
-\paragraph{Rule 16 – Swap projection and join (projection push-down)}
+Rule 16 – Swap projection and join (projection push-down)
 
 \[
 \pi_{Q}(R \Join_{P} S)
@@ -254,3 +254,134 @@ The corresponding optimized operator tree is:
   \label{fig:op-tree-optimized}
 \end{figure}
 
+
+
+\newpage
+
+\subtask{Cardinality estimation}
+
+We assume that the attributes $a$, $f$ and $g$ are independently and
+uniformly distributed over $10$ distinct values. Hence, a single
+equality condition such as $f = 2$ has selectivity $1/10$, and the
+conjunction $f = 2 \land g = 10$ has selectivity $1/10 \cdot 1/10 =
+1/100$. The relation cardinalities are:
+\[
+\Card(U) = 10,\quad \Card(V) = 100000,\quad \Card(W) = 1000000.
+\]
+
+\paragraph{Non-optimized operator tree}
+
+In the canonical (non-optimized) tree, the operations on $V$ and $W$
+start with the Cartesian product:
+\[
+V \times W, \qquad
+\Card(V \times W) = \Card(V) \cdot \Card(W)
+= 100000 \cdot 1000000
+= 10^{11}.
+\]
+
+Then the selection
+\[
+\sigma_{V.e = W.e \,\land\, f = 2 \,\land\, g = 10}(V \times W)
+\]
+is applied. We can reason about its effect as follows:
+
+\begin{itemize}
+  \item The conditions $f = 2$ and $g = 10$ refer only to $W$ and are
+        independent and uniform, so together they have selectivity
+        $1/100$.
+        Applying them to $V \times W$ reduces the size from $10^{11}$
+        to
+        \[
+          10^{11} \cdot \frac{1}{100} = 10^{9}.
+        \]
+  \item The remaining condition $V.e = W.e$ is an equality join on a
+        uniformly distributed key. With uniformity, the probability
+        that $V.e$ and $W.e$ match for a random pair is approximately
+        $1 / \Card(W)$, so we obtain
+        \[
+          10^{9} \cdot \frac{1}{1000000} = 1000
+        \]
+        tuples after this selection.
+\end{itemize}
+
+The subsequent projection $\pi_{V.c, V.d, W.e, W.f, W.g}$ does not
+change the number of tuples, so the intermediate result before joining
+with $U$ still has about $1000$ tuples. The join with $U$ and the
+selection on $a$ produce a very small final result compared to the
+sizes above.
+
+The \emph{dominant} intermediate result in the non-optimized tree is
+therefore the Cartesian product $V \times W$ with
+\[
+\Card_{\max}^{\text{(non-opt)}} \approx 10^{11} \text{ tuples.}
+\]
+
+\paragraph{Optimized operator tree}
+
+In the optimized tree from the previous subtask, selections and
+projections are pushed down:
+
+\begin{itemize}
+  \item On $U$: first $\pi_{a,b,c}(U)$ keeps $10$ tuples, then
+        $\sigma_{a \text{ LIKE 'Ben'}}$ selects one out of $10$ values
+        of $a$:
+        \[
+          \Card\bigl(\sigma_{a \text{ LIKE 'Ben'}}(\pi_{a,b,c}(U))\bigr)
+          = 10 \cdot \frac{1}{10} = 1.
+        \]
+  \item On $W$: first $\pi_{e,f,g}(W)$ keeps $1000000$ tuples, then
+        $\sigma_{f = 2 \land g = 10}$ has selectivity $1/100$:
+        \[
+          \Card\bigl(\sigma_{f = 2 \land g = 10}(\pi_{e,f,g}(W))\bigr)
+          = 1000000 \cdot \frac{1}{100} = 10000.
+        \]
+  \item On $V$: $\pi_{c,e}(V)$ keeps all $100000$ tuples (only the
+        attributes change, not the number of rows).
+\end{itemize}
+
+We then join the reduced $V$ and $W$:
+\[
+\pi_{c,e}(V) \Join_{V.e = W.e}
+\sigma_{f = 2 \land g = 10}(\pi_{e,f,g}(W)).
+\]
+
+Under the uniform foreign-key assumption, the fraction of $W$'s key
+values that survive the selection is
+\[
+\frac{\Card(\sigma_{f = 2 \land g = 10}(W))}{\Card(W)}
+=
+\frac{10000}{1000000}
+=
+\frac{1}{100}.
+\]
+Each tuple in $V$ therefore matches with probability $1/100$, so the
+join result has expected size
+\[
+\Card(V \Join W')
+\approx \Card(V) \cdot \frac{1}{100}
+= 100000 \cdot \frac{1}{100}
+= 1000,
+\]
+where $W' = \sigma_{f = 2 \land g = 10}(W)$.
+
+Joining this intermediate result (about $1000$ tuples) with
+$\sigma_{a \text{ LIKE 'Ben'}}(\pi_{a,b,c}(U))$ (one tuple) on $c$
+yields a very small final result. The largest intermediate results in
+the optimized plan are thus the base relation $W$ with $10^6$ tuples
+and the filtered subset of $W$ with only
+\[
+\Card\bigl(\sigma_{f = 2 \land g = 10}(W)\bigr) = 10000
+\]
+tuples before the join.
+
+Compared to the non-optimized tree, the \emph{largest} intermediate
+result in the optimized tree is:
+\[
+\Card_{\max}^{\text{(opt)}} \approx 10000 \text{ tuples (on the
+filtered $W$),}
+\]
+instead of the huge Cartesian product with
+\(\Card_{\max}^{\text{(non-opt)}} \approx 10^{11}\) tuples. This shows
+why pushing selections down and avoiding Cartesian products is crucial
+for query performance.
