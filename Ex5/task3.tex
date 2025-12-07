@@ -1,0 +1,99 @@
+\setcounter{subtask}{0}
+\subtask{Page accesses for complex query}
+
+We consider
+\[
+Q:\ \texttt{SELECT COUNT(*) FROM R WHERE A = 321 AND B <> 50;}
+\]
+
+We approximate the combined filter factor assuming independence and
+uniformity for $A$ and $B$:
+\[
+FF(A = 321 \land B \neq 50)
+= FF(A = 321)\cdot FF(B \neq 50)
+= \frac{1}{1000}\cdot\Bigl(1 - \frac{1}{1000}\Bigr)
+\approx 0.000999.
+\]
+With $\Card(R) = 50\,000$ this gives an expected
+\[
+\Card(R \mid A = 321 \land B \neq 50)
+\approx 50\,000 \cdot 0.000999 \approx 50
+\]
+matching tuples.
+
+\begin{enumerate}[i]
+
+  \item \textbf{R (no index)}\\
+  No index on $A$ or $B$ $\Rightarrow$ full table scan:
+  \[
+  C_Q(\texttt{R}) = NPages(R) = \mathbf{123}.
+  \]
+
+  \item \textbf{RA (unclustered index on A)}\\
+  Use index on $A$ for $A = 321$.  Index search cost:
+  $C_{IS} = h = 2$ (height from Task~2).  
+  Unclustered index $\Rightarrow$ in the worst case one data page per
+  qualifying tuple:
+  \[
+  C_Q(\texttt{RA})
+  = C_{IS} + \#\text{data pages}
+  \approx 2 + 50
+  = \mathbf{52}.
+  \]
+
+  \item \textbf{RB (unclustered index on B)}\\
+  Condition $B \neq 50$ is almost unselective (matches nearly all
+  tuples), so using the index would touch almost all data pages.
+  Cheaper is a full table scan:
+  \[
+  C_Q(\texttt{RB}) \approx NPages(R) = \mathbf{123}.
+  \]
+
+  \item \textbf{RAB (indexes on A and B)}\\
+  Index on $A$ is useful (selective), index on $B$ is not (due to
+  $B \neq 50$).  We use the same strategy as for \texttt{RA}:
+  \[
+  C_Q(\texttt{RAB}) \approx C_Q(\texttt{RA}) = \mathbf{52}.
+  \]
+
+  \item \textbf{RA\$ (clustered, direct index on A)}\\
+  Tuples with the same value of $A$ are stored contiguously.  The
+  number of tuples with $A = 321$ and $B \neq 50$ is still about $50$,
+  but all of them fit into \emph{one} data page (each page holds $407$
+  tuples). Hence:
+  \[
+  C_Q(\texttt{RA\$})
+  \approx C_{IS} + \#\text{data pages}
+  \approx 2 + 1
+  = \mathbf{3}.
+  \]
+
+  \item \textbf{RC (combined index on (A,B))}\\
+  Combined key $(A,B)$ allows us to jump directly to the range
+  $A=321$ in the index and then scan only the leaf entries for that
+  value, filtering by $B \neq 50$.  As in Task~2, the index cost for a
+  query on $A$ is
+  \[
+  C(A = 321) = (h - 1) + \bigl\lceil FF(A=321)\cdot n_{\text{leaf}} \bigr\rceil
+  = 5,
+  \]
+  and the additional $B \neq 50$ condition is applied while scanning
+  those leaf pages.  We thus approximate:
+  \[
+  C_Q(\texttt{RC}) \approx \mathbf{5}.
+  \]
+
+\end{enumerate}
+
+\begin{center}
+\begin{tabular}{|l||c|}
+\hline
+Layout & \# page accesses for $Q$ \\ \hline\hline
+\texttt{R}    & 123 \\ \hline
+\texttt{RA}   & 52  \\ \hline
+\texttt{RB}   & 123 \\ \hline
+\texttt{RAB}  & 52  \\ \hline
+\texttt{RA\$} & 3   \\ \hline
+\texttt{RC}   & 5   \\ \hline
+\end{tabular}
+\end{center}
