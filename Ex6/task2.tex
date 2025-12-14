@@ -1,0 +1,84 @@
+\begin{enumerate}[a)]
+	\item This is the dependency graph of this schedule: \newline
+	\begin{tikzpicture}[node distance=2cm]
+		\node (t2) {$T^2$};
+		\node[right of=t2] (t1) {$T^1$};
+		\node[right of=t1] (t3) {$T^3$};
+		\draw[->] (t2) -- (t1);
+		\draw[->] (t1) to [looseness=1, in=160, out=20] (t3);
+		\draw[->] (t3) to [looseness=1, in=-20, out=-160] (t1);
+	\end{tikzpicture}
+
+	\begin{enumerate}[i)]
+		\item \textbf{CPSR:}
+
+		Cycle in dependency graph
+		$\Rightarrow$ not conflict-serializable
+		$\Rightarrow$ $S_4 \notin \text{CPSR}$.
+
+		\item \textbf{OPSR and COPSR:}
+
+		$\text{COPSR} \subseteq \text{OPSR} \subseteq \text{CPSR}$
+		$\Rightarrow$ $S_4 \notin \text{OPSR}$
+		and $S_4 \notin \text{COPSR}$.
+	\end{enumerate}
+
+	\item This is the dependency graph of this schedule: \newline
+	\begin{tikzpicture}[node distance=2cm]
+		\node (t2) {$T^2$};
+		\node[right of=t2] (t1) {$T^1$};
+		\node[right of=t1] (t3) {$T^3$};
+		\draw[->] (t2) -- (t1);
+		\draw[->] (t1) -- (t3);
+	\end{tikzpicture}
+
+	\begin{enumerate}[i)]
+		\item \textbf{CPSR:}
+
+		Acyclic dependency graph
+		$\Rightarrow$ conflict-serializable
+		$\Rightarrow$ $S_5 \in \text{CPSR}$.
+
+		\item \textbf{COPSR:}
+
+		Commit order is $C_2 $ before $ C_1 $ before $ C_3$
+		and dependencies $T^2 \to T^1 \to T^3$
+		$\Rightarrow$ commit-order preserved
+		$\Rightarrow$ $S_5 \in \text{COPSR}$.
+
+		\item \textbf{OPSR:}
+
+		$\text{COPSR} \subseteq \text{OPSR}$
+		$\Rightarrow$ $S_5 \in \text{OPSR}$.
+	\end{enumerate}
+
+	\item This is the dependency graph of this schedule: \newline
+	\begin{tikzpicture}[node distance=2cm]
+		\node (t3) {$T^3$};
+		\node[right of=t3] (t1) {$T^1$};
+		\node[right of=t1] (t2) {$T^2$};
+		\draw[->] (t3) -- (t1);
+		\draw[->] (t1) -- (t2);
+	\end{tikzpicture}
+
+	\begin{enumerate}[i)]
+		\item \textbf{CPSR:}
+
+		Acyclic dependency graph
+		$\Rightarrow$ conflict-serializable
+		$\Rightarrow$ $S_6 \in \text{CPSR}$.
+
+		\item \textbf{COPSR:}
+
+		Dependency $T^1 \to T^2$
+		exists but commit order is $C_2 $ before $ C_1$
+		$\Rightarrow$ commit-order violation
+		$\Rightarrow$ $S_6 \notin \text{COPSR}$.
+
+		\item \textbf{OPSR:}
+
+		Serial order enforced by graph is $T^3 $ before $ T^1 $ before $ T^2$ but the real-time order is $T^2 $ before $ T^3$
+		$\Rightarrow$ order mismatch
+		$\Rightarrow$ $S_6 \notin \text{OPSR}$.
+	\end{enumerate}
+\end{enumerate}
