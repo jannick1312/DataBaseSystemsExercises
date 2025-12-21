@@ -1,0 +1,203 @@
+% -------------------- Task 3a: Schedule S7 --------------------
+\noindent\textbf{a) Given schedule:}
+\[
+S_7=\langle
+\ri{2}{a}\;
+\ri{1}{b}\;
+\wi{1}{b}\;
+\ri{1}{a}\;
+\ri{4}{b}\;
+\Ci{1}\;
+\ri{3}{c}\;
+\ri{3}{b}\;
+\wi{2}{a}\;
+\wi{2}{b}\;
+\Ci{2}\;
+\ri{3}{a}\;
+\Ci{3}
+\rangle
+\]
+Committed transactions: $\T{1},\T{2},\T{3}$ (via $\Ci{1},\Ci{2},\Ci{3}$). Transaction $\T{4}$ is \emph{active} (no $C_4/A_4$).
+
+\vspace{0.6em}
+
+\begingroup
+\renewcommand{\labelenumi}{(\arabic{enumi})}
+\setlength{\leftmargini}{1.8em}
+
+\begin{enumerate}
+\item \textbf{CPSR: No.}\\
+For conflict-serializability we consider the \emph{committed projection} $C(S_7)$, i.e., remove all actions of non-committed transactions (here: remove $\T{4}$):
+\[
+C(S_7)=\langle
+\ri{2}{a}\;
+\ri{1}{b}\;
+\wi{1}{b}\;
+\ri{1}{a}\;
+\Ci{1}\;
+\ri{3}{c}\;
+\ri{3}{b}\;
+\wi{2}{a}\;
+\wi{2}{b}\;
+\Ci{2}\;
+\ri{3}{a}\;
+\Ci{3}
+\rangle
+\]
+Serialization graph on committed transactions $\{\T{1},\T{2},\T{3}\}$ has conflict edges:
+\begin{itemize}
+  \setlength{\itemsep}{0.2em}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \item On $b$: $\wi{1}{b}$ before $\ri{3}{b}$ \;$\Rightarrow$ $\T{1}\rightarrow \T{3}$.
+  \item On $b$: $\ri{3}{b}$ before $\wi{2}{b}$ \;$\Rightarrow$ $\T{3}\rightarrow \T{2}$.
+  \item On $a$: $\wi{2}{a}$ before $\ri{3}{a}$ \;$\Rightarrow$ $\T{2}\rightarrow \T{3}$.
+\end{itemize}
+Thus there is a cycle $\T{2}\leftrightarrow \T{3}$, hence $S_7\notin\mathrm{CPSR}$.
+
+\item \textbf{RC: Yes.}\\
+Reads-from relation:
+\begin{itemize}
+  \setlength{\itemsep}{0.2em}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \item $\ri{3}{b}$ reads from $\wi{1}{b}$ \;$\Rightarrow$ $(\T{1},b,\T{3})\in RF(S_7)$.
+  \item $\ri{3}{a}$ reads from $\wi{2}{a}$ \;$\Rightarrow$ $(\T{2},a,\T{3})\in RF(S_7)$.
+\end{itemize}
+Since $\Ci{1}<\Ci{3}$ and $\Ci{2}<\Ci{3}$, the schedule is recoverable: $S_7\in\mathrm{RC}$.
+
+\item \textbf{ACA: No.}\\
+$\ri{4}{b}$ reads the value written by $\wi{1}{b}$ before $\T{1}$ commits:
+\[
+\wi{1}{b}\;<\;\ri{4}{b}\;<\;\Ci{1},
+\]
+so a dirty read occurs and $S_7\notin\mathrm{ACA}$.
+
+\item \textbf{ST: No.}\\
+Strictness is violated because $\T{4}$ reads $b$ after $\T{1}$ wrote $b$ but before $\T{1}$ commits:
+\[
+\wi{1}{b}\;<\;\ri{4}{b}\;<\;\Ci{1}.
+\]
+Hence $S_7\notin\mathrm{ST}$.
+
+\item \textbf{RG: No.}\\
+Rigorous requires that between any two conflicting actions the earlier transaction has already terminated.
+The conflict $\wi{1}{b} < \ri{4}{b}$ has no $C_1/A_1$ in between, thus $S_7\notin\mathrm{RG}$.
+\end{enumerate}
+
+\endgroup
+
+\vspace{0.4em}
+\noindent\textbf{Final classification:}
+\[
+S_7 \notin \mathrm{CPSR},\qquad
+S_7 \in \mathrm{RC},\qquad
+S_7 \notin \mathrm{ACA},\qquad
+S_7 \notin \mathrm{ST},\qquad
+S_7 \notin \mathrm{RG}.
+\]
+
+
+
+\noindent\textbf{b) Given schedule:}
+\[
+S_8=\langle
+\ri{3}{b}\;
+\ri{1}{a}\;
+\ri{4}{a}\;
+\wi{4}{a}\;
+\Ci{4}\;
+\ri{3}{a}\;
+\wi{3}{b}\;
+\ri{2}{b}\;
+\wi{1}{c}\;
+\Ci{1}\;
+\ri{2}{c}\;
+\wi{2}{b}\;
+\ri{3}{b}\;
+\Ci{3}\;
+\Ai{2}
+\rangle
+\]
+Committed transactions: $\T{1},\T{3},\T{4}$ (via $\Ci{1},\Ci{3},\Ci{4}$). Transaction $\T{2}$ \emph{aborts}.
+
+\vspace{0.6em}
+
+\begingroup
+\renewcommand{\labelenumi}{(\arabic{enumi})}
+\setlength{\leftmargini}{1.8em}
+
+\begin{enumerate}
+\item \textbf{CPSR: Yes.}\\
+For conflict-serializability we consider the committed projection $C(S_8)$, i.e., remove all actions of non-committed transactions (here: remove $\T{2}$):
+\[
+C(S_8)=\langle
+\ri{3}{b}\;
+\ri{1}{a}\;
+\ri{4}{a}\;
+\wi{4}{a}\;
+\Ci{4}\;
+\ri{3}{a}\;
+\wi{3}{b}\;
+\wi{1}{c}\;
+\Ci{1}\;
+\ri{3}{b}\;
+\Ci{3}
+\rangle
+\]
+Serialization graph on committed transactions $\{\T{1},\T{3},\T{4}\}$ has conflict edges:
+\begin{itemize}
+  \setlength{\itemsep}{0.2em}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \item On $a$: $\ri{1}{a}$ before $\wi{4}{a}$ \;$\Rightarrow$ $\T{1}\rightarrow \T{4}$.
+  \item On $a$: $\wi{4}{a}$ before $\ri{3}{a}$ \;$\Rightarrow$ $\T{4}\rightarrow \T{3}$.
+\end{itemize}
+There are no other conflicts among $\T{1},\T{3},\T{4}$, and the graph is acyclic (order $\T{1}\rightarrow\T{4}\rightarrow\T{3}$).
+Hence $S_8\in\mathrm{CPSR}$.
+
+\item \textbf{RC: No.}\\
+Reads-from relation (relevant reads):
+\begin{itemize}
+  \setlength{\itemsep}{0.2em}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \item $\ri{3}{a}$ reads from $\wi{4}{a}$ \;$\Rightarrow$ $(\T{4},a,\T{3})\in RF(S_8)$.
+  \item $\ri{2}{c}$ reads from $\wi{1}{c}$ \;$\Rightarrow$ $(\T{1},c,\T{2})\in RF(S_8)$.
+  \item $\ri{2}{b}$ reads from $\wi{3}{b}$ \;$\Rightarrow$ $(\T{3},b,\T{2})\in RF(S_8)$.
+  \item The later $\ri{3}{b}$ reads from $\wi{2}{b}$ \;$\Rightarrow$ $(\T{2},b,\T{3})\in RF(S_8)$.
+\end{itemize}
+Transaction $\T{3}$ commits ($\Ci{3}$) but reads $b$ from $\T{2}$, and $\T{2}$ does \emph{not} commit (it aborts: $\Ai{2}$).
+Therefore the schedule is not recoverable: $S_8\notin\mathrm{RC}$.
+
+\item \textbf{ACA: No.}\\
+A dirty read occurs: $\ri{2}{b}$ reads the value written by $\wi{3}{b}$ before $\T{3}$ commits:
+\[
+\wi{3}{b}\;<\;\ri{2}{b}\;<\;\Ci{3}.
+\]
+Hence $S_8\notin\mathrm{ACA}$.
+
+\item \textbf{ST: No.}\\
+Strictness is violated because after $\T{3}$ writes $b$, another transaction reads $b$ before $\T{3}$ commits:
+\[
+\wi{3}{b}\;<\;\ri{2}{b}\;<\;\Ci{3}.
+\]
+(Also, $\wi{2}{b}<\ri{3}{b}<\Ai{2}$ violates strictness as well.)
+Thus $S_8\notin\mathrm{ST}$.
+
+\item \textbf{RG: No.}\\
+Rigorous requires that between any two conflicting actions the earlier transaction has already terminated.
+The conflict $\wi{3}{b}<\ri{2}{b}$ has no $C_3/A_3$ in between, hence $S_8\notin\mathrm{RG}$.
+\end{enumerate}
+
+\endgroup
+
+\vspace{0.4em}
+\noindent\textbf{Final classification (S8):}
+\[
+S_8 \in \mathrm{CPSR},\qquad
+S_8 \notin \mathrm{RC},\qquad
+S_8 \notin \mathrm{ACA},\qquad
+S_8 \notin \mathrm{ST},\qquad
+S_8 \notin \mathrm{RG}.
+\]
